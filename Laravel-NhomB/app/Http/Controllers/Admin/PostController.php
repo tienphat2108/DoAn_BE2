@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Post;
+use Illuminate\Http\Request;
+
+class PostController extends Controller
+{
+    public function index()
+    {
+        $posts = Post::orderBy('created_at', 'desc')->get();
+        return view('admin.quanlybainguoidung', compact('posts'));
+    }
+
+    public function approve(Post $post)
+    {
+        $post->update(['status' => 'approved']);
+        return back()->with('success', 'Đã duyệt bài viết thành công.');
+    }
+
+    public function destroy(Post $post)
+    {
+        $post->delete();
+        return back()->with('success', 'Đã xóa bài viết thành công.');
+    }
+
+    public function pendingPosts()
+    {
+        $posts = Post::where('status', 'pending')->orderBy('created_at', 'desc')->get();
+        return view('admin.baichoduyet', compact('posts'));
+    }
+
+    public function approvedPosts()
+    {
+        $posts = Post::where('status', 'approved')->orderBy('created_at', 'desc')->get();
+        return view('admin.baidaduyet', compact('posts'));
+    }
+
+    public function postSchedule()
+    {
+        $posts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
+        return view('admin.lichdangbai', compact('posts'));
+    }
+} 
