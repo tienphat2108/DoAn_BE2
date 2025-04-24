@@ -1,5 +1,8 @@
 <?php
+<<<<<<< HEAD
 
+=======
+>>>>>>> VuVanTri
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -8,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     use HasFactory;
+<<<<<<< HEAD
 
     protected $primaryKey = 'post_id';
 
@@ -24,11 +28,15 @@ class Post extends Model
         'created_at',
         'updated_at'
     ];
+=======
+    protected $fillable = ['title', 'content'];
+>>>>>>> VuVanTri
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+<<<<<<< HEAD
 
     public function media()
     {
@@ -45,3 +53,6 @@ class Post extends Model
         return $this->hasMany(Comment::class, 'post_id');
     }
 } 
+=======
+}
+>>>>>>> VuVanTri
