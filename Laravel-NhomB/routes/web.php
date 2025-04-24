@@ -16,3 +16,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+use Illuminate\View\View;
+
+Route::get('/admin/bai-da-duyet', function (): View {
+    return view('qlduyetbai');
+});
