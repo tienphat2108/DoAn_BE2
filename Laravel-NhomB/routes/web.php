@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\TrangChuController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use Illuminate\View\View;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,4 +61,4 @@ Route::get('/', function () {
         return redirect()->route('trangchu');
     }
     return redirect()->route('login');
-}); 
+});
