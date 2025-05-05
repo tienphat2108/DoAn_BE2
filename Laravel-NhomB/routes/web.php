@@ -31,6 +31,10 @@ Route::post('/register', [RegisterController::class, 'register']);
 // User Routes
 Route::middleware('auth')->group(function () {
     Route::get('/trangchu', [TrangChuController::class, 'index'])->name('trangchu');
+    Route::get('/canhan', [TrangChuController::class, 'canhan'])->name('canhan');
+    Route::post('/canhan/avatar', [TrangChuController::class, 'updateAvatar'])->name('canhan.avatar');
+    Route::post('/canhan/password', [TrangChuController::class, 'updatePassword'])->name('canhan.password');
+    Route::post('/posts', [\App\Http\Controllers\PostController::class, 'store'])->name('posts.store');
 });
 
 // Admin Routes

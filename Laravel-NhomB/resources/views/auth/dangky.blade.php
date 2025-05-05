@@ -14,6 +14,17 @@
         <form class="register-form" method="POST" action="{{ route('register') }}">
             @csrf
             
+            <!-- Tên đăng nhập -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ old('username') }}" required>
+                    @error('username')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+
             <!-- Họ và tên -->
             <div class="form-row">
                 <div class="form-group">

@@ -9,7 +9,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('avatar_url')->default('/images/default-avatar.png');
+            if (!Schema::hasColumn('users', 'avatar_url')) {
+                $table->string('avatar_url')->default('/images/default-avatar.png');
+            }
         });
     }
 

@@ -80,9 +80,11 @@
         </div>
         <div class="navbar-center">
             <a href="{{ url('/trangchu') }}" class="nav-icon active"><i class="fas fa-home"></i></a>
-            <a href="#" class="nav-icon"><i class="fas fa-users"></i></a>
         </div>
         <div class="navbar-right">
+            <a href="/canhan" class="navbar-avatar-link">
+                <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="navbar-avatar">
+            </a>
             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: inline;">
                 @csrf
                 <button type="button" class="logout-btn" onclick="showLogoutModal()">Đăng xuất</button>
@@ -104,28 +106,35 @@
 
     <div class="container">
         <!-- Phần thêm bài viết mới -->
-        <div class="create-post">
-            <div class="create-post-header">
-                <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
-                <input type="text" id="post-content" placeholder="Bạn đang nghĩ gì thế?" onclick="expandPostInput()">
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger">
+                @foreach($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
             </div>
-            <div class="create-post-expanded" id="create-post-expanded" style="display: none;">
-                <input type="text" id="post-title" placeholder="Tiêu đề bài viết..." required>
-                <textarea id="post-content-expanded" placeholder="Bạn đang nghĩ gì?"></textarea>
-                <div class="create-post-actions">
-                    <div class="action-options">
-                        <label for="post-media"><i class="fas fa-photo-video photo-video"></i> Ảnh/Video</label>
-                        <span onclick="getLocation()"><i class="fas fa-map-marker-alt location-icon"></i> Thêm vị trí</span>
+        @endif
+        <form class="create-post" method="POST" action="{{ route('posts.store') }}" enctype="multipart/form-data" style="box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:16px;padding:24px 24px 16px 24px;background:#fff;">
+            @csrf
+            <div class="create-post-header" style="display:flex;align-items:center;gap:16px;">
+                <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
+                <input type="text" name="content" id="post-content" placeholder="Bạn đang nghĩ gì thế?" style="flex:1;padding:14px 18px;border-radius:24px;border:1px solid #e4e6eb;background:#f0f2f5;font-size:16px;">
+            </div>
+            <div class="create-post-expanded" id="create-post-expanded" style="margin-top:16px;">
+                <input type="text" name="title" id="post-title" placeholder="Tiêu đề bài viết..." required style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #e4e6eb;margin-bottom:12px;font-size:15px;">
+                <div class="create-post-actions" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                    <div class="action-options" style="display:flex;gap:18px;align-items:center;">
+                        <label for="post-media" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:500;color:#1877f2;"><i class="fas fa-photo-video photo-video"></i> Ảnh/Video</label>
+                        <span style="display:flex;align-items:center;gap:6px;color:#ff4444;"><i class="fas fa-map-marker-alt location-icon"></i> Thêm vị trí</span>
                     </div>
-                    <input type="file" id="post-media" accept="image/*,video/*" style="display: none;" onchange="previewMedia()">
-                    <input type="hidden" id="post-latitude">
-                    <input type="hidden" id="post-longitude">
-                    <span id="location-display" style="color: #65676b; margin-top: 5px; display: none;"></span>
-                    <div id="media-preview" style="margin-top: 10px;"></div>
-                    <button class="btn-post" onclick="createPost()">Đăng bài</button>
+                    <input type="file" id="post-media" name="media[]" accept="image/*,video/*" multiple style="display:none;" onchange="previewMedia(event)">
+                    <button class="btn-post" type="submit" style="background:#1877f2;color:#fff;padding:10px 32px;border-radius:24px;font-weight:600;font-size:16px;border:none;box-shadow:0 2px 8px rgba(24,119,242,0.08);transition:background 0.2s;">Đăng bài</button>
                 </div>
+                <div id="media-preview" style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;"></div>
             </div>
-        </div>
+        </form>
 
         <!-- Danh sách bài viết đã đăng -->
         <div class="posts-list">
@@ -205,6 +214,35 @@
             var modal = document.getElementById('logoutModal');
             if (event.target == modal) {
                 hideLogoutModal();
+            }
+        }
+
+        function previewMedia(event) {
+            const preview = document.getElementById('media-preview');
+            preview.innerHTML = '';
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (file.type.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '200px';
+                        img.style.marginRight = '10px';
+                        img.style.borderRadius = '8px';
+                        preview.appendChild(img);
+                    } else if (file.type.startsWith('video/')) {
+                        const video = document.createElement('video');
+                        video.src = e.target.result;
+                        video.controls = true;
+                        video.style.maxWidth = '200px';
+                        video.style.marginRight = '10px';
+                        video.style.borderRadius = '8px';
+                        preview.appendChild(video);
+                    }
+                };
+                reader.readAsDataURL(file);
             }
         }
     </script>

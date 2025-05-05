@@ -14,6 +14,9 @@
                 <span>Fite</span>
             </div>
             <h1>Fite hệ thống ADMIN</h1>
+            <div class="admin-info">
+                <span class="admin-name">{{ Auth::user()->name }}</span>
+            </div>
         </div>
 
         <div class="admin-content">
@@ -32,11 +35,11 @@
             <div class="admin-main">
                 <h2>Quản lý người dùng</h2>
                 <div class="users-table">
-                    <table>
+                    <table class="table-users">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Họ tên</th>
+                                <th class="user-name-cell">Họ tên</th>
                                 <th>Email</th>
                                 <th>Ngày tạo</th>
                                 <th>Thao tác</th>
@@ -47,7 +50,7 @@
                                 @if(!$user->is_admin)
                                 <tr>
                                     <td>{{ $user->id }}</td>
-                                    <td>{{ $user->name }}</td>
+                                    <td class="user-name-cell">{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->created_at->format('d/m/Y') }}</td>
                                     <td>

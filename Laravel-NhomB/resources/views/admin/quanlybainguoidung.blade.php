@@ -14,6 +14,9 @@
                 <span>Fite</span>
             </div>
             <h1>Fite hệ thống ADMIN</h1>
+            <div class="admin-info">
+                <span class="admin-name">{{ Auth::user()->name }}</span>
+            </div>
         </div>
 
         <div class="admin-content">
@@ -45,7 +48,7 @@
                 @endif
 
                 <div class="posts-table">
-                    <table>
+                    <table class="table-users">
                         <thead>
                             <tr>
                                 <th>Hình ảnh</th>
@@ -59,8 +62,13 @@
                             @forelse($posts as $post)
                             <tr>
                                 <td>
-                                    @if($post->image)
-                                        <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" style="max-width: 100px;">
+                                    @if($post->media && $post->media->count() > 0)
+                                        @php $media = $post->media->first(); @endphp
+                                        @if(str_contains($media->file_type, 'image'))
+                                            <img src="{{ asset('storage/' . $media->file_url) }}" alt="{{ $post->title }}" style="max-width: 100px; border-radius: 8px;">
+                                        @elseif(str_contains($media->file_type, 'video'))
+                                            <video src="{{ asset('storage/' . $media->file_url) }}" style="max-width: 100px; border-radius: 8px;" controls></video>
+                                        @endif
                                     @else
                                         Không có hình
                                     @endif
@@ -76,17 +84,17 @@
                                     @endif
                                 </td>
                                 <td>{{ $post->created_at->format('d/m/Y') }}</td>
-                                <td>
+                                <td class="action-cell">
                                     @if($post->status == 'pending')
-                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline;">
+                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block;">
                                             @csrf
                                             <button type="submit" class="btn-approve">Gửi</button>
                                         </form>
                                     @endif
-                                    <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline;">
+                                    <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn-delete" onclick="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')">Xóa</button>
+                                        <button type="submit" class="btn-delete">Xóa</button>
                                     </form>
                                 </td>
                             </tr>

@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PostLike;
+use App\Models\PostComment;
 
 class Post extends Model
 {
     use HasFactory;
-
-    protected $primaryKey = 'post_id';
 
     protected $fillable = [
         'image',
@@ -37,11 +37,11 @@ class Post extends Model
 
     public function likes()
     {
-        return $this->hasMany(Like::class, 'post_id');
+        return $this->hasMany(PostLike::class, 'post_id');
     }
 
     public function comments()
     {
-        return $this->hasMany(Comment::class, 'post_id');
+        return $this->hasMany(PostComment::class, 'post_id');
     }
 } 
