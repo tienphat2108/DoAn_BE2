@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-<<<<<<< HEAD
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TrangChuController;
@@ -9,12 +8,6 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use Illuminate\View\View;
-=======
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use App\Http\Controllers\AdminPostController;
-use App\Http\Controllers\PostController;
->>>>>>> VuVanTri
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +20,6 @@ use App\Http\Controllers\PostController;
 |
 */
 
-<<<<<<< HEAD
 // Login Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -73,19 +65,6 @@ Route::get('/', function () {
         return redirect()->route('trangchu');
     }
     return redirect()->route('login');
-=======
-// Đăng xuất
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    return redirect('/login');
-})->name('logout');
-
-// Trang chính
-Route::get('/', function () {
-    return view('welcome');
->>>>>>> VuVanTri
 });
 
 // Thông báo người dùng
