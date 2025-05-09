@@ -369,4 +369,82 @@ body {
 
 .cancel-button:hover {
     background-color: #5a6268;
+}
+
+/* Interaction page custom styles */
+.interaction-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.interaction-btn {
+    background: #e5e5e5;
+    color: #222;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.interaction-btn.selected, .interaction-btn.active {
+    background: #111;
+    color: #fff;
+}
+.interaction-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 18px;
+    margin-top: 0;
+    color: #111;
+    text-align: left;
+}
+.interaction-filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.interaction-select {
+    border: 1px solid #888;
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-size: 15px;
+    background: #fff;
+    color: #222;
+}
+.interaction-filter-btn {
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: #f5f5f5;
+    color: #222;
+    padding: 7px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.interaction-filter-btn:hover {
+    background: #e0e0e0;
+}
+.interaction-table-wrapper {
+    margin-top: 16px;
+}
+.interaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+.interaction-table th, .interaction-table td {
+    border: 2px solid #888;
+    padding: 16px 0;
+    text-align: center;
+    font-size: 16px;
+}
+.interaction-table th {
+    background: #e5e5e5;
+    font-weight: bold;
+}
+.interaction-table td {
+    background: #fff;
 } 
