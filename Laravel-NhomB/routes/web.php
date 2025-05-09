@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use Illuminate\View\View;
+use App\Http\Controllers\Admin\InteractionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -85,3 +86,5 @@ Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(fu
     Route::post('/{id}/request-edit', [AdminPostController::class, 'requestEdit'])->name('requestEdit');
     Route::delete('/{id}', [AdminPostController::class, 'destroy'])->name('destroy');
 });
+
+Route::get('/admin/tuong-tac', [InteractionController::class, 'index'])->name('admin.tuongtac');
