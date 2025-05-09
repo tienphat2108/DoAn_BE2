@@ -118,6 +118,7 @@
         @endif
         <form class="create-post" method="POST" action="{{ route('posts.store') }}" enctype="multipart/form-data" style="box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:16px;padding:24px 24px 16px 24px;background:#fff;">
             @csrf
+            <input type="hidden" name="status" value="pending">
             <div class="create-post-header" style="display:flex;align-items:center;gap:16px;">
                 <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
                 <input type="text" name="content" id="post-content" placeholder="Bạn đang nghĩ gì thế?" style="flex:1;padding:14px 18px;border-radius:24px;border:1px solid #e4e6eb;background:#f0f2f5;font-size:16px;">

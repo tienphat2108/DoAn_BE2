@@ -43,4 +43,34 @@ class PostController extends Controller
         $posts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
         return view('admin.lichdangbai', compact('posts'));
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'content' => 'required',
+            'status' => 'required|in:pending,approved,scheduled',
+            'scheduled_at' => 'nullable|date|after:now',
+            'media.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4|max:10240',
+        ]);
+
+        $validated['user_id'] = auth()->id();
+        $post = Post::create($validated);
+
+        // Lưu media nếu có
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                $path = $file->store('media', 'public');
+                $type = $file->getClientMimeType();
+                \App\Models\Media::create([
+                    'post_id' => $post->id,
+                    'file_url' => $path,
+                    'file_type' => $type,
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.quanlybainguoidung')
+            ->with('success', 'Bài viết đã được tạo thành công.');
+    }
 } 
