@@ -448,3 +448,17 @@ body {
 .interaction-table td {
     background: #fff;
 } 
+
+.comment-item button {
+    padding: 10px 24px;
+    font-size: 16px;
+    margin: 0 6px 6px 0;
+    border-radius: 6px;
+    border: none;
+    background: #e0e0e0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.comment-item button:hover {
+    background: #bdbdbd;
+}

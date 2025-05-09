@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use Illuminate\View\View;
 use App\Http\Controllers\Admin\InteractionController;
+use App\Http\Controllers\Admin\AdminCommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,3 +89,4 @@ Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(fu
 });
 
 Route::get('/admin/tuong-tac', [InteractionController::class, 'index'])->name('admin.tuongtac');
+Route::get('/admin/quanlybinhluan', [AdminCommentController::class, 'index'])->name('admin.quanlybinhluan');
