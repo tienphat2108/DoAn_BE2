@@ -91,3 +91,4 @@ Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(fu
 Route::get('/admin/tuongtac', [InteractionController::class, 'index'])->name('admin.tuongtac');
 Route::get('/admin/quanlybinhluan', [AdminCommentController::class, 'index'])->name('admin.quanlybinhluan');
 Route::get('/admin/theodoiluotxem', function () {return view('admin.theodoiluotxem');})->name('admin.theodoiluotxem');
+Route::get('/admin/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('admin.xuatdulieu');
