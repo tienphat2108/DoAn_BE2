@@ -93,3 +93,4 @@ Route::get('/admin/quanlybinhluan', [AdminCommentController::class, 'index'])->n
 Route::get('/admin/theodoiluotxem', function () {return view('admin.theodoiluotxem');})->name('admin.theodoiluotxem');
 Route::get('/admin/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('admin.xuatdulieu');
 Route::get('/admin/baocaohieusuat', function () {return view('admin.baocaohieusuat');})->name('admin.baocaohieusuat');
+Route::get('/admin/guithongbao', function () {return view('admin.guithongbao');})->name('admin.guithongbao');
