@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\PostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,4 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Quản lý bài viết
+    Route::get('/quanlybainguoidung', [PostController::class, 'index'])->name('quanlybainguoidung');
+    Route::post('/quanlybainguoidung/{post}/approve', [PostController::class, 'approve'])->name('approvePost');
+    Route::delete('/quanlybainguoidung/{post}', [PostController::class, 'destroy'])->name('deletePost');
 });
