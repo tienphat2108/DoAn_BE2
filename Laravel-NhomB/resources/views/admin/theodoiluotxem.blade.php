@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Theo dõi lượt xem</title>
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <div class="logo">
+                <span>Fite</span>
+            </div>
+            <h1>Fite hệ thống ADMIN</h1>
+            <div class="admin-info">
+                <span class="admin-name">{{ Auth::user()->name }}</span>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            <div class="admin-sidebar">
+                <ul class="admin-menu">
+                    <li><a href="{{ route('admin.quanlynguoidung') }}">QUẢN LÝ NGƯỜI DÙNG</a></li>
+                    <li><a href="{{ route('admin.quanlybainguoidung') }}">QUẢN LÝ BÀI VIẾT CỦA NGƯỜI DÙNG</a></li>
+                    <li><a href="{{ route('admin.baichoduyet') }}">BÀI CHỜ DUYỆT</a></li>
+                    <li><a href="{{ route('admin.baidaduyet') }}">BÀI ĐÃ DUYỆT</a></li>
+                    <li><a href="{{ route('admin.lichdangbai') }}">LỊCH ĐĂNG BÀI</a></li>
+                    <li><a href="{{ route('admin.phantichtruycap') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
+                    <li><a href="#" onclick="showLogoutModal()">ĐĂNG XUẤT</a></li>
+                </ul>
+            </div>
+
+            <div class="admin-main">
+                <div class="interaction-actions" style="margin-bottom: 24px;">
+                    <button class="interaction-btn">QUẢN LÝ BÌNH LUẬN</button>
+                    <button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button>
+                    <button class="interaction-btn selected">THEO DÕI LƯỢT XEM</button>
+                    <button class="interaction-btn">XUẤT DỮ LIỆU</button>
+                    <button class="interaction-btn">BÁO CÁO</button>
+                    <button class="interaction-btn">GỬI THÔNG BÁO</button>
+                </div>
+                <h2 class="interaction-title">Theo Dõi Lượt Xem</h2>
+                <div class="interaction-filters" style="display: flex; gap: 12px; margin-bottom: 24px;">
+                    <select class="interaction-select">
+                        <option>Tất cả bài viết</option>
+                        <option>Bài viết A</option>
+                        <option>Bài viết B</option>
+                        <option>Bài viết C</option>
+                    </select>
+                    <button class="interaction-filter-btn">Lọc</button>
+                </div>
+                <div class="interaction-table-wrapper">
+                    <table class="interaction-table">
+                        <thead>
+                            <tr>
+                                <th>Bài viết</th>
+                                <th>Lượt xem hôm nay</th>
+                                <th>Lượt xem tuần này</th>
+                                <th>Lượt xem tháng này</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Bài viết A</td>
+                                <td>150</td>
+                                <td>30</td>
+                                <td>20</td>
+                            </tr>
+                            <tr>
+                                <td>Bài viết B</td>
+                                <td>220</td>
+                                <td>50</td>
+                                <td>35</td>
+                            </tr>
+                            <tr>
+                                <td>Bài viết C</td>
+                                <td>300</td>
+                                <td>80</td>
+                                <td>45</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <h2>Đăng xuất</h2>
+            <p>Bạn có muốn đăng xuất không?</p>
+            <div class="modal-buttons">
+                <button class="modal-button confirm-button" onclick="confirmLogout()">Có</button>
+                <button class="modal-button cancel-button" onclick="hideLogoutModal()">Không</button>
+            </div>
+        </div>
+    </div>
+
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
+
+    <script>
+        function showLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            document.getElementById('logout-form').submit();
+        }
+
+        // Đóng modal khi click ra ngoài
+        window.onclick = function(event) {
+            var logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) {
+                hideLogoutModal();
+            }
+        }
+    </script>
+</body>
+</html> 

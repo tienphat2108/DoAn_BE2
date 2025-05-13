@@ -88,5 +88,6 @@ Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(fu
     Route::delete('/{id}', [AdminPostController::class, 'destroy'])->name('destroy');
 });
 
-Route::get('/admin/tuong-tac', [InteractionController::class, 'index'])->name('admin.tuongtac');
+Route::get('/admin/tuongtac', [InteractionController::class, 'index'])->name('admin.tuongtac');
 Route::get('/admin/quanlybinhluan', [AdminCommentController::class, 'index'])->name('admin.quanlybinhluan');
+Route::get('/admin/theodoiluotxem', function () {return view('admin.theodoiluotxem');})->name('admin.theodoiluotxem');
