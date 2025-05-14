@@ -89,8 +89,8 @@
             <div class="profile-actions">
                 <button class="profile-menu-btn" onclick="toggleProfileMenu()"><i class="fas fa-ellipsis-h"></i></button>
                 <div class="profile-menu" id="profileMenu">
-                    <a href="#" onclick="showChangePassword()"><i class="fas fa-key"></i> Đổi mật khẩu</a>
-                    <a href="#" onclick="showChangeAvatar()"><i class="fas fa-image"></i> Đổi avatar</a>
+                    <a href="#" onclick="showChangePassword(event)"><i class="fas fa-key"></i> Đổi mật khẩu</a>
+                    <a href="#" onclick="showChangeAvatar(event)"><i class="fas fa-image"></i> Đổi avatar</a>
                 </div>
             </div>
         </div>
@@ -167,7 +167,30 @@
             </form>
         </div>
     </div>
+    <!-- Modal chỉnh sửa bài viết -->
+    <div id="editPostModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Chỉnh sửa tiêu đề bài viết</h2>
+            <form id="edit-post-form" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="text" name="title" id="edit-post-title" placeholder="Tiêu đề mới" required style="width:100%;margin-bottom:10px;">
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button confirm-button">Lưu</button>
+                    <button type="button" class="modal-button cancel-button" onclick="hideEditModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="{{ asset('js/canhan.js') }}"></script>
     <script src="{{ asset('js/trangchu.js') }}"></script>
+    <script>
+    console.log('showChangePassword:', typeof window.showChangePassword);
+    console.log('showChangeAvatar:', typeof window.showChangeAvatar);
+    console.log('showLogoutModal:', typeof window.showLogoutModal);
+    console.log('editPost:', typeof window.editPost);
+    console.log('deletePost:', typeof window.deletePost);
+    console.log('togglePostMenu:', typeof window.togglePostMenu);
+    </script>
 </body>
 </html>
