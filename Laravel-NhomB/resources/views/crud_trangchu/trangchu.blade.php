@@ -70,6 +70,48 @@
         .cancel-button:hover {
             background-color: #5a6268;
         }
+
+        .post {
+            position: relative;
+        }
+        .post-menu-wrapper {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+        }
+        .post-menu-btn {
+            cursor: pointer;
+            font-size: 22px;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .post-menu-btn:hover {
+            background: #f0f0f0;
+        }
+        .post-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 28px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .post-menu.active {
+            display: block;
+        }
+        .post-menu div {
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .post-menu div:hover {
+            background: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -140,7 +182,7 @@
         <!-- Danh sách bài viết đã đăng -->
         <div class="posts-list">
             @foreach($posts as $post)
-                <div class="post" id="post-{{ $post->post_id }}">
+                <div class="post" id="post-{{ $post->post_id }}" data-user-id="{{ $post->user_id }}">
                     <div class="post-header">
                         <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
                         <div class="post-info">
@@ -152,6 +194,11 @@
                                     <span>Đang ở gần <span class="location-name" data-lat="{{ $post->latitude }}" data-lng="{{ $post->longitude }}">Đang tải...</span></span>
                                 </div>
                             @endif
+                        </div>
+                        <!-- Dấu 3 chấm và menu -->
+                        <div class="post-menu-wrapper">
+                            <span class="post-menu-btn" onclick="togglePostMenu(this)">&#x22EE;</span>
+                            <div class="post-menu"></div>
                         </div>
                     </div>
                     <div class="post-body">
@@ -191,6 +238,11 @@
                         </div>
                     </div>
                 </div>
+                <!-- Form xóa ẩn -->
+                <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;">
+                    @csrf
+                    @method('DELETE')
+                </form>
             @endforeach
         </div>
     </div>
@@ -246,6 +298,30 @@
                 reader.readAsDataURL(file);
             }
         }
+
+        var currentUserId = {{ Auth::id() }};
+        function togglePostMenu(btn) {
+            // Đóng tất cả menu khác
+            document.querySelectorAll('.post-menu').forEach(menu => menu.classList.remove('active'));
+            var wrapper = btn.closest('.post-menu-wrapper');
+            var post = btn.closest('.post');
+            var postOwnerId = post.getAttribute('data-user-id');
+            var postId = post.id.replace('post-', '');
+            var menu = wrapper.querySelector('.post-menu');
+            menu.innerHTML = '';
+            if (parseInt(currentUserId) === parseInt(postOwnerId)) {
+                menu.innerHTML += '<div onclick="editPost(' + postId + ')">Chỉnh sửa</div>';
+                menu.innerHTML += '<div onclick="deletePost(' + postId + ')">Xóa</div>';
+            } else {
+                menu.innerHTML += '<div onclick="reportPost(' + postId + ')">Báo cáo</div>';
+            }
+            menu.classList.toggle('active');
+        }
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('post-menu-btn')) {
+                document.querySelectorAll('.post-menu').forEach(menu => menu.classList.remove('active'));
+            }
+        });
     </script>
 </body>
 </html>

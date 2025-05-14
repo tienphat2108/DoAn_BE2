@@ -210,6 +210,46 @@ function shareToEmail(postId) {
     console.log('Sharing via Email:', postId);
 }
 
+// XÓA BÀI VIẾT
+function deletePost(postId) {
+    var form = document.getElementById('delete-form-' + postId);
+    if (form) {
+        if (confirm('Bạn có chắc muốn xóa bài viết này?')) {
+            form.submit();
+        }
+    } else {
+        alert('Không tìm thấy form xóa cho bài viết này!');
+    }
+}
+
+// CHỈNH SỬA BÀI VIẾT
+function editPost(postId) {
+    var modal = document.getElementById('editPostModal');
+    var form = document.getElementById('edit-post-form');
+    var titleInput = document.getElementById('edit-post-title');
+    var contentInput = document.getElementById('edit-post-content');
+    var post = document.getElementById('post-' + postId);
+    if (modal && form && titleInput && contentInput && post) {
+        // Lấy dữ liệu hiện tại
+        var title = post.querySelector('.post-body h4').innerText;
+        var content = post.querySelector('.post-body p').innerText;
+        // Đổ dữ liệu vào modal
+        titleInput.value = title;
+        contentInput.value = content;
+        // Đặt action cho form
+        form.action = '/posts/' + postId;
+        // Hiện modal
+        modal.style.display = 'flex';
+    } else {
+        alert('Chức năng chỉnh sửa bài viết: ' + postId + '\n(Hoặc chưa có modal chỉnh sửa trên trang)');
+    }
+}
+
+function hideEditModal() {
+    var modal = document.getElementById('editPostModal');
+    if (modal) modal.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const locationElements = document.querySelectorAll('.location-name');
     const geocoder = new google.maps.Geocoder();
@@ -256,6 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 showComments(postId);
             } else if (actionType === 'share') {
                 sharePost(postId);
+            } else if (actionType === 'delete') {
+                deletePost(postId);
+            } else if (actionType === 'edit') {
+                editPost(postId);
             }
         });
     });

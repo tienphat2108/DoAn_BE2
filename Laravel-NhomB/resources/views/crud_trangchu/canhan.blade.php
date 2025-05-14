@@ -6,8 +6,51 @@
     <title>Trang cá nhân</title>
     <link rel="stylesheet" href="{{ asset('css/canhan.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .post-menu-wrapper {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+        }
+        .post-menu-btn {
+            cursor: pointer;
+            font-size: 22px;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .post-menu-btn:hover {
+            background: #f0f0f0;
+        }
+        .post-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 28px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .post-menu.active {
+            display: block;
+        }
+        .post-menu div {
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .post-menu div:hover {
+            background: #f0f0f0;
+        }
+        .post {
+            position: relative;
+        }
+    </style>
 </head>
-<body>
+<body data-current-user-id="{{ Auth::id() }}" data-profile-user-id="{{ $user->id }}">
     <nav class="navbar">
         <div class="navbar-left">
             <a href="/trangchu" class="navbar-brand">Fite</a>
@@ -55,12 +98,16 @@
             <h3>Bài đăng của bạn</h3>
             <div class="posts-list">
                 @forelse($posts as $post)
-                    <div class="post" id="post-{{ $post->post_id }}">
+                    <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                         <div class="post-header">
                             <img src="{{ $user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
                             <div class="post-info">
                                 <h3>{{ $user->full_name ?? $user->username }}</h3>
                                 <span>{{ $post->created_at->diffForHumans() }}</span>
+                            </div>
+                            <div class="post-menu-wrapper">
+                                <span class="post-menu-btn" onclick="togglePostMenu(this)">&#x22EE;</span>
+                                <div class="post-menu"></div>
                             </div>
                         </div>
                         <div class="post-body">
@@ -82,6 +129,10 @@
                             <button>Thích ({{ $post->likes->count() }})</button>
                             <button>Bình luận ({{ $post->comments->count() }})</button>
                         </div>
+                        <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;">
+                            @csrf
+                            @method('DELETE')
+                        </form>
                     </div>
                 @empty
                     <p>Bạn chưa đăng bài nào.</p>
@@ -117,44 +168,6 @@
         </div>
     </div>
     <script src="{{ asset('js/canhan.js') }}"></script>
-    <script>
-        function showLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'flex';
-        }
-        function hideLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'none';
-        }
-        function confirmLogout() {
-            document.getElementById('logout-form').submit();
-        }
-        function toggleProfileMenu() {
-            var menu = document.getElementById('profileMenu');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-        window.onclick = function(event) {
-            var menu = document.getElementById('profileMenu');
-            if (event.target !== menu && !menu.contains(event.target) && event.target.className !== 'profile-menu-btn') {
-                menu.style.display = 'none';
-            }
-            var logoutModal = document.getElementById('logoutModal');
-            if (event.target == logoutModal) {
-                hideLogoutModal();
-            }
-        }
-        function showChangePassword() {
-            document.getElementById('changePasswordModal').style.display = 'flex';
-            document.getElementById('profileMenu').style.display = 'none';
-        }
-        function hideChangePassword() {
-            document.getElementById('changePasswordModal').style.display = 'none';
-        }
-        function showChangeAvatar() {
-            document.getElementById('changeAvatarModal').style.display = 'flex';
-            document.getElementById('profileMenu').style.display = 'none';
-        }
-        function hideChangeAvatar() {
-            document.getElementById('changeAvatarModal').style.display = 'none';
-        }
-    </script>
+    <script src="{{ asset('js/trangchu.js') }}"></script>
 </body>
 </html>
