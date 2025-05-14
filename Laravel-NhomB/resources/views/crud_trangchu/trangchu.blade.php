@@ -146,6 +146,22 @@
         </div>
     </div>
 
+    <!-- Modal chỉnh sửa bài viết -->
+    <div id="editPostModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Chỉnh sửa tiêu đề bài viết</h2>
+            <form id="edit-post-form" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="text" name="title" id="edit-post-title" placeholder="Tiêu đề mới" required style="width:100%;margin-bottom:10px;">
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button confirm-button">Lưu</button>
+                    <button type="button" class="modal-button cancel-button" onclick="hideEditModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Phần thêm bài viết mới -->
         @if(session('success'))
@@ -181,7 +197,7 @@
         <!-- Danh sách bài viết đã đăng -->
         <div class="posts-list">
             @foreach($posts as $post)
-                <div class="post" id="post-{{ $post->post_id }}" data-user-id="{{ $post->user_id }}">
+                <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                     <div class="post-header">
                         <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
                         <div class="post-info">
@@ -197,7 +213,14 @@
                         <!-- Dấu 3 chấm và menu -->
                         <div class="post-menu-wrapper">
                             <span class="post-menu-btn" onclick="togglePostMenu(this)">&#x22EE;</span>
-                            <div class="post-menu"></div>
+                            <div class="post-menu">
+                                @if(Auth::id() === $post->user_id)
+                                    <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
+                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
+                                @else
+                                    <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     <div class="post-body">
@@ -216,15 +239,15 @@
                         @endif
                     </div>
                     <div class="post-actions">
-                        <button onclick="likePost({{ $post->post_id }})">
+                        <button onclick="likePost({{ $post->id }})">
                             Thích ({{ $post->likes->count() }})
                         </button>
-                        <button onclick="showComments({{ $post->post_id }})">
+                        <button onclick="showComments({{ $post->id }})">
                             Bình luận ({{ $post->comments->count() }})
                         </button>
                     </div>
                     <!-- Phần bình luận -->
-                    <div class="comments" id="comments-{{ $post->post_id }}" style="display: none;">
+                    <div class="comments" id="comments-{{ $post->id }}" style="display: none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->comment_id }}">
                                 <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
@@ -232,8 +255,8 @@
                             </div>
                         @endforeach
                         <div class="comment-input">
-                            <input type="text" id="comment-input-{{ $post->post_id }}" placeholder="Viết bình luận...">
-                            <button onclick="addComment({{ $post->post_id }})">Gửi</button>
+                            <input type="text" id="comment-input-{{ $post->id }}" placeholder="Viết bình luận...">
+                            <button onclick="addComment({{ $post->id }})">Gửi</button>
                         </div>
                     </div>
                 </div>
@@ -248,79 +271,5 @@
 
     <script src="{{ asset('js/trangchu.js') }}"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
-    <script>
-        function showLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'flex';
-        }
-
-        function hideLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'none';
-        }
-
-        function confirmLogout() {
-            document.getElementById('logout-form').submit();
-        }
-
-        // Đóng modal khi click ra ngoài
-        window.onclick = function(event) {
-            var modal = document.getElementById('logoutModal');
-            if (event.target == modal) {
-                hideLogoutModal();
-            }
-        }
-
-        function previewMedia(event) {
-            const preview = document.getElementById('media-preview');
-            preview.innerHTML = '';
-            const files = event.target.files;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (file.type.startsWith('image/')) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.maxWidth = '200px';
-                        img.style.marginRight = '10px';
-                        img.style.borderRadius = '8px';
-                        preview.appendChild(img);
-                    } else if (file.type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = e.target.result;
-                        video.controls = true;
-                        video.style.maxWidth = '200px';
-                        video.style.marginRight = '10px';
-                        video.style.borderRadius = '8px';
-                        preview.appendChild(video);
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        var currentUserId = {{ Auth::id() }};
-        function togglePostMenu(btn) {
-            // Đóng tất cả menu khác
-            document.querySelectorAll('.post-menu').forEach(menu => menu.classList.remove('active'));
-            var wrapper = btn.closest('.post-menu-wrapper');
-            var post = btn.closest('.post');
-            var postOwnerId = post.getAttribute('data-user-id');
-            var postId = post.id.replace('post-', '');
-            var menu = wrapper.querySelector('.post-menu');
-            menu.innerHTML = '';
-            if (parseInt(currentUserId) === parseInt(postOwnerId)) {
-                menu.innerHTML += '<div onclick="editPost(' + postId + ')">Chỉnh sửa</div>';
-                menu.innerHTML += '<div onclick="deletePost(' + postId + ')">Xóa</div>';
-            } else {
-                menu.innerHTML += '<div onclick="reportPost(' + postId + ')">Báo cáo</div>';
-            }
-            menu.classList.toggle('active');
-        }
-        document.addEventListener('click', function(e) {
-            if (!e.target.classList.contains('post-menu-btn')) {
-                document.querySelectorAll('.post-menu').forEach(menu => menu.classList.remove('active'));
-            }
-        });
-    </script>
 </body>
 </html>

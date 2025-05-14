@@ -212,13 +212,13 @@ function shareToEmail(postId) {
 
 // XÓA BÀI VIẾT
 function deletePost(postId) {
-    var form = document.getElementById('delete-form-' + postId);
-    if (form) {
-        if (confirm('Bạn có chắc muốn xóa bài viết này?')) {
+    if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+        var form = document.getElementById('delete-form-' + postId);
+        if (form) {
             form.submit();
+        } else {
+            alert('Không tìm thấy form xóa cho bài viết này!');
         }
-    } else {
-        alert('Không tìm thấy form xóa cho bài viết này!');
     }
 }
 
@@ -227,21 +227,13 @@ function editPost(postId) {
     var modal = document.getElementById('editPostModal');
     var form = document.getElementById('edit-post-form');
     var titleInput = document.getElementById('edit-post-title');
-    var contentInput = document.getElementById('edit-post-content');
     var post = document.getElementById('post-' + postId);
-    if (modal && form && titleInput && contentInput && post) {
-        // Lấy dữ liệu hiện tại
+    
+    if (modal && form && titleInput && post) {
         var title = post.querySelector('.post-body h4').innerText;
-        var content = post.querySelector('.post-body p').innerText;
-        // Đổ dữ liệu vào modal
         titleInput.value = title;
-        contentInput.value = content;
-        // Đặt action cho form
         form.action = '/posts/' + postId;
-        // Hiện modal
         modal.style.display = 'flex';
-    } else {
-        alert('Chức năng chỉnh sửa bài viết: ' + postId + '\n(Hoặc chưa có modal chỉnh sửa trên trang)');
     }
 }
 
@@ -249,6 +241,48 @@ function hideEditModal() {
     var modal = document.getElementById('editPostModal');
     if (modal) modal.style.display = 'none';
 }
+
+// Đảm bảo chỉ gán onsubmit một lần
+document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('edit-post-form');
+    if (editForm) {
+        editForm.onsubmit = function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            formData.append('_method', 'PUT');
+            const postId = this.action.split('/').pop();
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: formData
+            })
+            .then(async res => {
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                    // Nếu không phải JSON (có thể là redirect HTML), coi như thành công
+                    document.querySelector(`#post-${postId} .post-body h4`).innerText = document.getElementById('edit-post-title').value;
+                    hideEditModal();
+                    return;
+                }
+                if (data && data.success) {
+                    document.querySelector(`#post-${postId} .post-body h4`).innerText = data.title || document.getElementById('edit-post-title').value;
+                    hideEditModal();
+                } else {
+                    alert((data && data.message) || 'Chỉnh sửa thất bại!');
+                }
+            })
+            .catch(() => {
+                // Nếu fetch lỗi, vẫn thử cập nhật DOM (phòng trường hợp backend redirect)
+                document.querySelector(`#post-${postId} .post-body h4`).innerText = document.getElementById('edit-post-title').value;
+                hideEditModal();
+            });
+        };
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     const locationElements = document.querySelectorAll('.location-name');
@@ -304,3 +338,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// Đảm bảo các hàm này là global để gọi được từ HTML
+window.togglePostMenu = function(btn) {
+    // Đóng tất cả menu khác
+    document.querySelectorAll('.post-menu').forEach(menu => menu.classList.remove('active'));
+    var menu = btn.nextElementSibling;
+    menu.classList.toggle('active');
+};
+window.editPost = editPost;
+window.deletePost = deletePost;
+window.hideEditModal = hideEditModal;
+window.showLogoutModal = function() {
+    var modal = document.getElementById('logoutModal');
+    if (modal) modal.style.display = 'flex';
+};
+window.hideLogoutModal = function() {
+    var modal = document.getElementById('logoutModal');
+    if (modal) modal.style.display = 'none';
+};
+window.confirmLogout = function() {
+    var form = document.getElementById('logout-form');
+    if (form) form.submit();
+};

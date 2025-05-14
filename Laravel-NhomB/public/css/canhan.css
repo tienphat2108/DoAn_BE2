@@ -220,19 +220,24 @@ body {
     background: #1565c0;
 }
 
-/* Modal styles (tái sử dụng từ trang chủ) */
+/* Modal overlay fix */
 .modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
     justify-content: center;
     align-items: center;
 }
+.modal[style*="display: flex"] {
+    display: flex !important;
+}
+/* End modal overlay fix */
+
 .modal-content {
     background-color: white;
     padding: 20px;
@@ -294,4 +299,31 @@ body {
     font-weight: 500;
     margin-top: 2px;
     display: inline-block;
+}
+
+.post-menu {
+    min-height: 40px;
+    min-width: 120px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: absolute;
+    right: 0;
+    top: 28px;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+}
+.post-menu.active {
+    display: flex !important;
+}
+.post-menu div {
+    padding: 10px 18px;
+    cursor: pointer;
+    font-size: 15px;
+    white-space: nowrap;
+}
+.post-menu div:hover {
+    background: #f0f0f0;
 }
