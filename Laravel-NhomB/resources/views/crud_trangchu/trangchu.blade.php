@@ -70,6 +70,48 @@
         .cancel-button:hover {
             background-color: #5a6268;
         }
+
+        .post {
+            position: relative;
+        }
+        .post-menu-wrapper {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+        }
+        .post-menu-btn {
+            cursor: pointer;
+            font-size: 22px;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .post-menu-btn:hover {
+            background: #f0f0f0;
+        }
+        .post-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 28px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .post-menu.active {
+            display: block;
+        }
+        .post-menu div {
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .post-menu div:hover {
+            background: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -101,6 +143,22 @@
                 <button class="modal-button confirm-button" onclick="confirmLogout()">Đăng xuất</button>
                 <button class="modal-button cancel-button" onclick="hideLogoutModal()">Hủy</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal chỉnh sửa bài viết -->
+    <div id="editPostModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Chỉnh sửa tiêu đề bài viết</h2>
+            <form id="edit-post-form" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="text" name="title" id="edit-post-title" placeholder="Tiêu đề mới" required style="width:100%;margin-bottom:10px;">
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button confirm-button">Lưu</button>
+                    <button type="button" class="modal-button cancel-button" onclick="hideEditModal()">Hủy</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -140,7 +198,7 @@
         <!-- Danh sách bài viết đã đăng -->
         <div class="posts-list">
             @foreach($posts as $post)
-                <div class="post" id="post-{{ $post->post_id }}">
+                <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                     <div class="post-header">
                         <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
                         <div class="post-info">
@@ -152,6 +210,18 @@
                                     <span>Đang ở gần <span class="location-name" data-lat="{{ $post->latitude }}" data-lng="{{ $post->longitude }}">Đang tải...</span></span>
                                 </div>
                             @endif
+                        </div>
+                        <!-- Dấu 3 chấm và menu -->
+                        <div class="post-menu-wrapper">
+                            <span class="post-menu-btn" onclick="togglePostMenu(this)">&#x22EE;</span>
+                            <div class="post-menu">
+                                @if(Auth::id() === $post->user_id)
+                                    <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
+                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
+                                @else
+                                    <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     <div class="post-body">
@@ -170,15 +240,15 @@
                         @endif
                     </div>
                     <div class="post-actions">
-                        <button onclick="likePost({{ $post->post_id }})">
+                        <button onclick="likePost({{ $post->id }})">
                             Thích ({{ $post->likes->count() }})
                         </button>
-                        <button onclick="showComments({{ $post->post_id }})">
+                        <button onclick="showComments({{ $post->id }})">
                             Bình luận ({{ $post->comments->count() }})
                         </button>
                     </div>
                     <!-- Phần bình luận -->
-                    <div class="comments" id="comments-{{ $post->post_id }}" style="display: none;">
+                    <div class="comments" id="comments-{{ $post->id }}" style="display: none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->comment_id }}">
                                 <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
@@ -186,66 +256,21 @@
                             </div>
                         @endforeach
                         <div class="comment-input">
-                            <input type="text" id="comment-input-{{ $post->post_id }}" placeholder="Viết bình luận...">
-                            <button onclick="addComment({{ $post->post_id }})">Gửi</button>
+                            <input type="text" id="comment-input-{{ $post->id }}" placeholder="Viết bình luận...">
+                            <button onclick="addComment({{ $post->id }})">Gửi</button>
                         </div>
                     </div>
                 </div>
+                <!-- Form xóa ẩn -->
+                <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;">
+                    @csrf
+                    @method('DELETE')
+                </form>
             @endforeach
         </div>
     </div>
 
     <script src="{{ asset('js/trangchu.js') }}"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
-    <script>
-        function showLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'flex';
-        }
-
-        function hideLogoutModal() {
-            document.getElementById('logoutModal').style.display = 'none';
-        }
-
-        function confirmLogout() {
-            document.getElementById('logout-form').submit();
-        }
-
-        // Đóng modal khi click ra ngoài
-        window.onclick = function(event) {
-            var modal = document.getElementById('logoutModal');
-            if (event.target == modal) {
-                hideLogoutModal();
-            }
-        }
-
-        function previewMedia(event) {
-            const preview = document.getElementById('media-preview');
-            preview.innerHTML = '';
-            const files = event.target.files;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (file.type.startsWith('image/')) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.maxWidth = '200px';
-                        img.style.marginRight = '10px';
-                        img.style.borderRadius = '8px';
-                        preview.appendChild(img);
-                    } else if (file.type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = e.target.result;
-                        video.controls = true;
-                        video.style.maxWidth = '200px';
-                        video.style.marginRight = '10px';
-                        video.style.borderRadius = '8px';
-                        preview.appendChild(video);
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-    </script>
 </body>
 </html>

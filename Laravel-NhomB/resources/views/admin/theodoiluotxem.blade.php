@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Quản lý người dùng</title>
+    <title>Theo dõi lượt xem</title>
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 <body>
@@ -27,42 +27,59 @@
                     <li><a href="{{ route('admin.baichoduyet') }}">BÀI CHỜ DUYỆT</a></li>
                     <li><a href="{{ route('admin.baidaduyet') }}">BÀI ĐÃ DUYỆT</a></li>
                     <li><a href="{{ route('admin.lichdangbai') }}">LỊCH ĐĂNG BÀI</a></li>
-                    <li><a href="{{ route('admin.quanlybinhluan') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
+                    <li><a href="{{ route('admin.phantichtruycap') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
                     <li><a href="#" onclick="showLogoutModal()">ĐĂNG XUẤT</a></li>
                 </ul>
             </div>
 
             <div class="admin-main">
-                <h2>Quản lý người dùng</h2>
-                <div class="users-table">
-                    <table class="table-users">
+                <div class="interaction-actions" style="margin-bottom: 24px;">
+                    <button class="interaction-btn">QUẢN LÝ BÌNH LUẬN</button>
+                    <button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button>
+                    <button class="interaction-btn selected">THEO DÕI LƯỢT XEM</button>
+                    <button class="interaction-btn">XUẤT DỮ LIỆU</button>
+                    <button class="interaction-btn">BÁO CÁO</button>
+                    <button class="interaction-btn">GỬI THÔNG BÁO</button>
+                </div>
+                <h2 class="interaction-title">Theo Dõi Lượt Xem</h2>
+                <div class="interaction-filters" style="display: flex; gap: 12px; margin-bottom: 24px;">
+                    <select class="interaction-select">
+                        <option>Tất cả bài viết</option>
+                        <option>Bài viết A</option>
+                        <option>Bài viết B</option>
+                        <option>Bài viết C</option>
+                    </select>
+                    <button class="interaction-filter-btn">Lọc</button>
+                </div>
+                <div class="interaction-table-wrapper">
+                    <table class="interaction-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th class="user-name-cell">Họ tên</th>
-                                <th>Email</th>
-                                <th>Ngày tạo</th>
-                                <th>Thao tác</th>
+                                <th>Bài viết</th>
+                                <th>Lượt xem hôm nay</th>
+                                <th>Lượt xem tuần này</th>
+                                <th>Lượt xem tháng này</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($users as $user)
-                                @if(!$user->is_admin)
-                                <tr>
-                                    <td>{{ $user->id }}</td>
-                                    <td class="user-name-cell">{{ $user->name }}</td>
-                                    <td>{{ $user->email }}</td>
-                                    <td>{{ $user->created_at->format('d/m/Y') }}</td>
-                                    <td>
-                                        <form action="{{ route('admin.deleteUser', $user->id) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-delete" onclick="showDeleteUserModal(event, this.form)">Xóa</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @endif
-                            @endforeach
+                            <tr>
+                                <td>Bài viết A</td>
+                                <td>150</td>
+                                <td>30</td>
+                                <td>20</td>
+                            </tr>
+                            <tr>
+                                <td>Bài viết B</td>
+                                <td>220</td>
+                                <td>50</td>
+                                <td>35</td>
+                            </tr>
+                            <tr>
+                                <td>Bài viết C</td>
+                                <td>300</td>
+                                <td>80</td>
+                                <td>45</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -82,25 +99,11 @@
         </div>
     </div>
 
-    <!-- Delete User Modal -->
-    <div id="deleteUserModal" class="modal">
-        <div class="modal-content">
-            <h2>Xóa người dùng</h2>
-            <p>Bạn có chắc chắn muốn xóa người dùng này?</p>
-            <div class="modal-buttons">
-                <button class="modal-button confirm-button" onclick="confirmDeleteUser()">Có</button>
-                <button class="modal-button cancel-button" onclick="hideDeleteUserModal()">Không</button>
-            </div>
-        </div>
-    </div>
-
     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
         @csrf
     </form>
 
     <script>
-        let currentDeleteForm = null;
-
         function showLogoutModal() {
             document.getElementById('logoutModal').style.display = 'flex';
         }
@@ -113,32 +116,11 @@
             document.getElementById('logout-form').submit();
         }
 
-        function showDeleteUserModal(event, form) {
-            event.preventDefault();
-            currentDeleteForm = form;
-            document.getElementById('deleteUserModal').style.display = 'flex';
-        }
-
-        function hideDeleteUserModal() {
-            document.getElementById('deleteUserModal').style.display = 'none';
-            currentDeleteForm = null;
-        }
-
-        function confirmDeleteUser() {
-            if (currentDeleteForm) {
-                currentDeleteForm.submit();
-            }
-        }
-
         // Đóng modal khi click ra ngoài
         window.onclick = function(event) {
             var logoutModal = document.getElementById('logoutModal');
-            var deleteUserModal = document.getElementById('deleteUserModal');
             if (event.target == logoutModal) {
                 hideLogoutModal();
-            }
-            if (event.target == deleteUserModal) {
-                hideDeleteUserModal();
             }
         }
     </script>
