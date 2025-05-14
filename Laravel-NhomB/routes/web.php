@@ -33,6 +33,7 @@ Route::post('/register', [RegisterController::class, 'register']);
 
 // User Routes
 Route::middleware('auth')->group(function () {
+    Route::get('/home', [TrangChuController::class, 'index'])->name('trangchu');
     Route::get('/trangchu', [TrangChuController::class, 'index'])->name('trangchu');
     Route::get('/canhan', [TrangChuController::class, 'canhan'])->name('canhan');
     Route::post('/canhan/avatar', [TrangChuController::class, 'updateAvatar'])->name('canhan.avatar');
@@ -69,7 +70,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-<<<<<<< HEAD
 // Thông báo người dùng
 // Route::get('/notifications', function () {
 //     return view('user.notifications', ['notifications' => auth()->user()->notifications]);
@@ -95,7 +95,3 @@ Route::get('/admin/theodoiluotxem', function () {return view('admin.theodoiluotx
 Route::get('/admin/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('admin.xuatdulieu');
 Route::get('/admin/baocaohieusuat', function () {return view('admin.baocaohieusuat');})->name('admin.baocaohieusuat');
 Route::get('/admin/guithongbao', function () {return view('admin.guithongbao');})->name('admin.guithongbao');
-=======
-Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
-Route::resource('posts', PostController::class); 
->>>>>>> DoTienPhat
