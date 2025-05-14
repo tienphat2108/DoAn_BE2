@@ -64,4 +64,7 @@ Route::get('/', function () {
         return redirect()->route('trangchu');
     }
     return redirect()->route('login');
-}); 
+});
+
+Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+Route::resource('posts', PostController::class); 
