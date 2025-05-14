@@ -34,12 +34,12 @@
 
             <div class="admin-main">
                 <div class="interaction-actions" style="margin-bottom: 24px;">
-                    <button class="interaction-btn selected">QUẢN LÝ BÌNH LUẬN</button>
-                    <button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button>
-                    <button class="interaction-btn">THEO DÕI LƯỢT XEM</button>
-                    <button class="interaction-btn">XUẤT DỮ LIỆU</button>
-                    <button class="interaction-btn">BÁO CÁO</button>
-                    <button class="interaction-btn">GỬI THÔNG BÁO</button>
+                    <a href="{{ route('admin.quanlybinhluan') }}"><button class="interaction-btn selected">QUẢN LÝ BÌNH LUẬN</button></a>
+                    <a href="{{ route('admin.tuongtac') }}"><button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button></a>
+                    <a href="{{ route('admin.theodoiluotxem') }}"><button class="interaction-btn">THEO DÕI LƯỢT XEM</button></a>
+                    <a href="{{ route('admin.xuatdulieu') }}"><button class="interaction-btn">XUẤT DỮ LIỆU</button></a>
+                    <a href="{{ route('admin.baocaohieusuat') }}"><button class="interaction-btn">BÁO CÁO</button></a>
+                    <a href="{{ route('admin.guithongbao') }}"><button class="interaction-btn">GỬI THÔNG BÁO</button></a>
                 </div>
                 <h2 class="interaction-title">Quản Lý Bình Luận</h2>
                 <div class="interaction-filters" style="display: flex; gap: 12px; margin-bottom: 24px;">
