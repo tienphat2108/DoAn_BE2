@@ -5,8 +5,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TrangChuController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\PostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,14 +45,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/quanlynguoidung/{user}', [UserController::class, 'destroy'])->name('deleteUser');
     
     // Quản lý bài viết
-    Route::get('/quanlybainguoidung', [PostController::class, 'index'])->name('quanlybainguoidung');
-    Route::post('/quanlybainguoidung/{post}/approve', [PostController::class, 'approve'])->name('approvePost');
-    Route::delete('/quanlybainguoidung/{post}', [PostController::class, 'destroy'])->name('deletePost');
+    Route::get('/quanlybainguoidung', [AdminPostController::class, 'index'])->name('quanlybainguoidung');
+    Route::post('/quanlybainguoidung/{post}/approve', [AdminPostController::class, 'approve'])->name('approvePost');
+    Route::delete('/quanlybainguoidung/{post}', [AdminPostController::class, 'destroy'])->name('deletePost');
     
     // Các trang khác
-    Route::get('/baichoduyet', [PostController::class, 'pendingPosts'])->name('baichoduyet');
-    Route::get('/baidaduyet', [PostController::class, 'approvedPosts'])->name('baidaduyet');
-    Route::get('/lichdangbai', [PostController::class, 'postSchedule'])->name('lichdangbai');
+    Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
+    Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
+    Route::get('/lichdangbai', [AdminPostController::class, 'postSchedule'])->name('lichdangbai');
     Route::get('/phantichtruycap', [AnalyticsController::class, 'index'])->name('phantichtruycap');
 });
 
@@ -67,4 +68,4 @@ Route::get('/', function () {
 });
 
 Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
-Route::resource('posts', PostController::class); 
+Route::resource('posts', PostController::class)->middleware('auth'); 
