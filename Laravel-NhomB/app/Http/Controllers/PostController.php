@@ -66,7 +66,6 @@ class PostController extends Controller
         return redirect()->route('trangchu')->with('success', 'Đăng bài thành công!');
     }
 
-<<<<<<< HEAD
     // Hiển thị form chỉnh sửa bài viết
     public function edit(Post $post)
     {
@@ -77,22 +76,33 @@ class PostController extends Controller
     public function update(Request $request, Post $post)
     {
         $request->validate([
-            'title'   => 'required',
-            'content' => 'required',
+            'title'   => 'required|string|max:255',
+            'content' => 'sometimes',
         ]);
-        $post->update($request->all());
-        return redirect()->route('posts.index');
+        $post->title = $request->input('title');
+        if ($request->has('content')) {
+            $post->content = $request->input('content');
+        }
+        $post->save();
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'title' => $post->title]);
+        }
+        return redirect()->route('trangchu')->with('success', 'Cập nhật thành công!');
     }
 
     // Xoá bài viết
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
-        if ($post->status == 'đã duyệt') {
-            $post->delete();
-            return redirect()->back()->with('success', 'Bài đã duyệt bị xoá vì vi phạm.');
+        // Nếu muốn kiểm tra quyền xóa, thêm ở đây (ví dụ: chỉ cho xóa bài của mình)
+        // if (auth()->id() !== $post->user_id) abort(403);
+
+        $post->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Xóa bài viết thành công!']);
         }
-        return redirect()->back()->with('error', 'Không thể xoá bài chưa duyệt.');
+        return redirect()->back()->with('success', 'Xóa bài viết thành công!');
     }
 
     // Duyệt bài viết
@@ -124,36 +134,3 @@ class PostController extends Controller
         return redirect()->back()->with('info', 'Đã gửi yêu cầu chỉnh sửa.');
     }
 }
-=======
-    public function destroy($id)
-    {
-        $post = Post::findOrFail($id);
-        // Nếu muốn kiểm tra quyền xóa, thêm ở đây (ví dụ: chỉ cho xóa bài của mình)
-        // if (auth()->id() !== $post->user_id) abort(403);
-
-        $post->delete();
-
-        // Nếu là request AJAX (fetch), trả về JSON
-        if (request()->expectsJson()) {
-            return response()->json(['success' => true]);
-        }
-
-        // Nếu là request thường, redirect về trang chủ
-        return redirect()->route('trangchu')->with('success', 'Xóa bài viết thành công!');
-    }
-
-    public function update(Request $request, Post $post)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-        ]);
-        $post->title = $request->input('title');
-        $post->save();
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json(['success' => true, 'title' => $post->title]);
-        }
-        return redirect()->route('trangchu')->with('success', 'Cập nhật thành công!');
-    }
-} 
->>>>>>> DoTienPhat
