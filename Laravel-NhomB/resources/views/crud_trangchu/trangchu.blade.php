@@ -252,22 +252,29 @@
                         <button onclick="likePost({{ $post->id }})">
                             Thích ({{ $post->likes->count() }})
                         </button>
-                        <button onclick="showComments({{ $post->id }})">
-                            Bình luận ({{ $post->comments->count() }})
+                        <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
+                            Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
                         </button>
                     </div>
                     <!-- Phần bình luận -->
-                    <div class="comments" id="comments-{{ $post->id }}" style="display: none;">
+                    <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
-                            <div class="comment" id="comment-{{ $comment->comment_id }}">
+                            <div class="comment" id="comment-{{ $comment->id }}">
                                 <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
                                 <p>{{ $comment->content }}</p>
+                                <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                         @endforeach
-                        <div class="comment-input">
-                            <input type="text" id="comment-input-{{ $post->id }}" placeholder="Viết bình luận...">
-                            <button onclick="addComment({{ $post->id }})">Gửi</button>
-                        </div>
+                        @if(Auth::check())
+                            <form class="comment-form" action="/admin/comments" method="POST" style="margin-top: 8px;">
+                                @csrf
+                                <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>
+                                <button type="submit">Gửi bình luận</button>
+                            </form>
+                        @else
+                            <p><a href="{{ route('login') }}">Đăng nhập</a> để bình luận.</p>
+                        @endif
                     </div>
                 </div>
                 <!-- Form xóa ẩn -->
@@ -294,5 +301,73 @@
 
     <script src="{{ asset('js/trangchu.js') }}"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+    console.log('Script AJAX bình luận đã chạy!');
+    document.querySelectorAll('form.comment-form').forEach(function(form) {
+        console.log('Đã gắn submit cho form:', form);
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var postId = form.querySelector('input[name="post_id"]').value;
+            var content = form.querySelector('textarea[name="content"]').value;
+            var countSpan = document.getElementById('comment-count-' + postId);
+            var commentsDiv = form.closest('.comments');
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    post_id: postId,
+                    content: content
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success || data.id) {
+                    if (countSpan) {
+                        var match = countSpan.textContent.match(/\d+/);
+                        if (match) {
+                            var current = parseInt(match[0]);
+                            countSpan.textContent = current + 1;
+                        } else {
+                            countSpan.textContent = 1;
+                        }
+                    }
+                    var newComment = document.createElement('div');
+                    newComment.className = 'comment';
+                    newComment.innerHTML = '<strong>Bạn</strong><p>' + content + '</p><span style=\"color: #888; font-size: 12px;\">Vừa xong</span>';
+                    commentsDiv.insertBefore(newComment, form);
+                    form.querySelector('textarea[name="content"]').value = '';
+                } else {
+                    alert('Có lỗi khi gửi bình luận!');
+                }
+            })
+            .catch(err => {
+                alert('Có lỗi khi gửi bình luận!');
+                console.error('AJAX error:', err);
+            });
+        });
+    });
+
+    // Toggle hiển thị bình luận
+    document.querySelectorAll('.toggle-comments-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var postId = btn.getAttribute('data-post-id');
+            var commentsDiv = document.getElementById('comments-' + postId);
+            if (commentsDiv.style.display === 'none' || commentsDiv.style.display === '') {
+                commentsDiv.style.display = 'block';
+            } else {
+                commentsDiv.style.display = 'none';
+            }
+        });
+    });
+    </script>
 </body>
 </html>

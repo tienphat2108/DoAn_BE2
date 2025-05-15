@@ -53,30 +53,17 @@
                     <button class="interaction-filter-btn">Tìm kiếm</button>
                 </div>
                 <div class="comment-list">
-                    <div class="comment-item">
-                        <b>Người dùng A:</b> Bình luận hay quá!
-                        <div>
-                            <button>Trả lời</button>
-                            <button>Xóa</button>
-                            <button>Sửa</button>
+                    @forelse($comments as $comment)
+                        <div class="comment-item">
+                            <b>{{ $comment->user->name }}:</b> {{ $comment->content }}
+                            <div>
+                                <button>Sửa</button>
+                                <button>Xóa</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="comment-item">
-                        <b>Người dùng A:</b> Tôi có một vài thắc mắc
-                        <div>
-                            <button>Trả lời</button>
-                            <button>Xóa</button>
-                            <button>Sửa</button>
-                        </div>
-                    </div>
-                    <div class="comment-item">
-                        <b>Người dùng A:</b> Bài viết rất hữu ích!
-                        <div>
-                            <button>Trả lời</button>
-                            <button>Xóa</button>
-                            <button>Sửa</button>
-                        </div>
-                    </div>
+                    @empty
+                        <p>Không có bình luận nào.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
