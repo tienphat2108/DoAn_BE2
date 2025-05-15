@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
     Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
+    Route::post('/posts/{post}/report', [PostController::class, 'report'])->name('posts.report')->middleware('auth');
 });
 
 // Admin Routes

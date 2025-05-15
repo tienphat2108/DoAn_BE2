@@ -487,6 +487,26 @@
             console.error('Lỗi khi cập nhật lượt chia sẻ:', error);
         });
     }
+
+    // Xử lý báo cáo bài viết
+    function reportPost(postId) {
+        if (!confirm('Bạn chắc chắn muốn báo cáo bài viết này?')) return;
+        fetch('/posts/' + postId + '/report', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || (data.success ? 'Đã báo cáo bài viết!' : 'Có lỗi xảy ra!'));
+        })
+        .catch(err => {
+            alert('Có lỗi khi báo cáo bài viết!');
+            console.error('Report error:', err);
+        });
+    }
     </script>
 </body>
 </html>

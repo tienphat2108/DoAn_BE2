@@ -25,10 +25,21 @@ class TrangChuController extends Controller
         // Kiểm tra xem bảng posts có tồn tại không
         if (Schema::hasTable('posts')) {
             // Lấy danh sách bài viết với các quan hệ
-            $posts = Post::with(['user', 'media', 'likes', 'comments.user'])
+            $posts = Post::with(['user', 'media', 'likes', 'comments.user', 'views'])
                         ->where('status', 'approved')
                         ->latest()
                         ->get();
+            // Tăng lượt xem cho mỗi bài viết
+            foreach ($posts as $post) {
+                // Kiểm tra nếu user đã xem bài này trong session thì không tăng nữa (chống spam F5)
+                $viewedKey = 'viewed_post_' . $post->id;
+                if (!session()->has($viewedKey)) {
+                    $post->views()->create([
+                        'user_id' => Auth::id(),
+                    ]);
+                    session()->put($viewedKey, true);
+                }
+            }
         } else {
             $posts = collect(); // Trả về collection rỗng nếu bảng chưa tồn tại
         }
