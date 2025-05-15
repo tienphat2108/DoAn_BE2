@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\PostLike;
 use App\Models\PostComment;
+use App\Models\Comment;
 
 class Post extends Model
 {
@@ -16,7 +17,12 @@ class Post extends Model
         'title',
         'status',
         'user_id',
-        'scheduled_at'
+        'scheduled_at',
+        'shares_count'
+    ];
+
+    protected $attributes = [
+        'shares_count' => 0
     ];
 
     protected $dates = [
@@ -42,6 +48,6 @@ class Post extends Model
 
     public function comments()
     {
-        return $this->hasMany(PostComment::class, 'post_id');
+        return $this->hasMany(Comment::class, 'post_id');
     }
 }

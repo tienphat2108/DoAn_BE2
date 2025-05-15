@@ -183,7 +183,7 @@
         </div>
     </div>
     <script src="{{ asset('js/canhan.js') }}"></script>
-    <script src="{{ asset('js/trangchu.js') }}"></script>
+    {{-- <script src="{{ asset('js/trangchu.js') }}"></script> --}}
     <script>
     console.log('showChangePassword:', typeof window.showChangePassword);
     console.log('showChangeAvatar:', typeof window.showChangeAvatar);

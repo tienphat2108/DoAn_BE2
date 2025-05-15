@@ -286,20 +286,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const locationElements = document.querySelectorAll('.location-name');
-    const geocoder = new google.maps.Geocoder();
-
     locationElements.forEach(element => {
         const lat = parseFloat(element.getAttribute('data-lat'));
         const lng = parseFloat(element.getAttribute('data-lng'));
-        const latlng = { lat, lng };
-
-        geocoder.geocode({ location: latlng }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-                element.innerText = results[0].formatted_address;
-            } else {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                let shortAddr = '';
+                if (data.address) {
+                    if (data.address.city) shortAddr += data.address.city;
+                    if (data.address.town) shortAddr += data.address.town;
+                    if (data.address.village) shortAddr += data.address.village;
+                    if (data.address.state) shortAddr += (shortAddr ? ', ' : '') + data.address.state;
+                    if (!shortAddr && data.display_name) shortAddr = data.display_name.split(',').slice(0,2).join(', ');
+                }
+                element.innerText = shortAddr || 'Không xác định';
+            })
+            .catch(() => {
                 element.innerText = 'Không xác định';
-            }
-        });
+            });
     });
 
     const userMenu = document.querySelector('.user-menu');
@@ -360,4 +365,61 @@ window.hideLogoutModal = function() {
 window.confirmLogout = function() {
     var form = document.getElementById('logout-form');
     if (form) form.submit();
+};
+
+// Leaflet (OpenStreetMap) chọn vị trí
+let leafletMap, leafletMarker, selectedLatLng = null, selectedAddress = '';
+window.showLocationModal = function() {
+    document.getElementById('locationModal').style.display = 'flex';
+    setTimeout(() => {
+        if (!leafletMap) {
+            leafletMap = L.map('leaflet-map').setView([10.762622, 106.660172], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(leafletMap);
+            leafletMarker = L.marker([10.762622, 106.660172], {draggable:true}).addTo(leafletMap);
+            leafletMap.on('click', function(e) {
+                setLeafletLocation(e.latlng.lat, e.latlng.lng);
+            });
+            leafletMarker.on('dragend', function(e) {
+                const pos = e.target.getLatLng();
+                setLeafletLocation(pos.lat, pos.lng);
+            });
+        }
+    }, 100);
+};
+window.hideLocationModal = function() {
+    document.getElementById('locationModal').style.display = 'none';
+};
+function setLeafletLocation(lat, lng) {
+    selectedLatLng = { lat, lng };
+    leafletMarker.setLatLng(selectedLatLng);
+    leafletMap.panTo(selectedLatLng);
+    // Gọi Nominatim để lấy địa chỉ ngắn gọn
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        .then(res => res.json())
+        .then(data => {
+            let shortAddr = '';
+            if (data.address) {
+                if (data.address.city) shortAddr += data.address.city;
+                if (data.address.town) shortAddr += data.address.town;
+                if (data.address.village) shortAddr += data.address.village;
+                if (data.address.state) shortAddr += (shortAddr ? ', ' : '') + data.address.state;
+                if (!shortAddr && data.display_name) shortAddr = data.display_name.split(',').slice(0,2).join(', ');
+            }
+            selectedAddress = shortAddr || 'Không xác định địa chỉ';
+            document.getElementById('modal-location-address').innerText = selectedAddress;
+        })
+        .catch(() => {
+            selectedAddress = '';
+            document.getElementById('modal-location-address').innerText = 'Không xác định địa chỉ';
+        });
+}
+window.confirmLocation = function() {
+    if (!selectedLatLng) return;
+    document.getElementById('post-latitude').value = selectedLatLng.lat;
+    document.getElementById('post-longitude').value = selectedLatLng.lng;
+    document.getElementById('location-display').innerText = selectedAddress ? `Địa điểm: ${selectedAddress}` : 'Đã chọn vị trí';
+    document.getElementById('location-display').style.display = 'block';
+    hideLocationModal();
 };

@@ -7,13 +7,11 @@ use App\Http\Controllers\Auth\TrangChuController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\AnalyticsController;
-<<<<<<< HEAD
 use Illuminate\View\View;
 use App\Http\Controllers\Admin\InteractionController;
 use App\Http\Controllers\Admin\AdminCommentController;
-=======
 use App\Http\Controllers\PostController;
->>>>>>> DoTienPhat
+use App\Http\Controllers\CommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,7 +40,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/canhan', [TrangChuController::class, 'canhan'])->name('canhan');
     Route::post('/canhan/avatar', [TrangChuController::class, 'updateAvatar'])->name('canhan.avatar');
     Route::post('/canhan/password', [TrangChuController::class, 'updatePassword'])->name('canhan.password');
-    Route::post('/posts', [\App\Http\Controllers\PostController::class, 'store'])->name('posts.store');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
+    Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
 });
 
 // Admin Routes
@@ -61,6 +61,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
     Route::get('/lichdangbai', [AdminPostController::class, 'postSchedule'])->name('lichdangbai');
     Route::get('/phantichtruycap', [AnalyticsController::class, 'index'])->name('phantichtruycap');
+
+    // Quản lý bình luận
+    Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
+    Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+    Route::put('/comments/{id}', [AdminCommentController::class, 'update'])->name('comments.update');
+    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 });
 
 // Redirect root to login
@@ -74,7 +80,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-<<<<<<< HEAD
 // Thông báo người dùng
 // Route::get('/notifications', function () {
 //     return view('user.notifications', ['notifications' => auth()->user()->notifications]);
@@ -83,6 +88,8 @@ Route::get('/admin/posts/pending', [PostController::class, 'pending']);
 
 // Route quản lý bài viết người dùng (CRUD cơ bản)
 Route::resource('posts', PostController::class)->middleware('auth');
+Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+Route::post('/posts/{id}/share', [PostController::class, 'share'])->name('posts.share')->middleware('auth');
 
 // Các route dành cho Admin
 Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(function () {
@@ -95,12 +102,7 @@ Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(fu
 });
 
 Route::get('/admin/tuongtac', [InteractionController::class, 'index'])->name('admin.tuongtac');
-Route::get('/admin/quanlybinhluan', [AdminCommentController::class, 'index'])->name('admin.quanlybinhluan');
 Route::get('/admin/theodoiluotxem', function () {return view('admin.theodoiluotxem');})->name('admin.theodoiluotxem');
 Route::get('/admin/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('admin.xuatdulieu');
 Route::get('/admin/baocaohieusuat', function () {return view('admin.baocaohieusuat');})->name('admin.baocaohieusuat');
 Route::get('/admin/guithongbao', function () {return view('admin.guithongbao');})->name('admin.guithongbao');
-=======
-Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
-Route::resource('posts', PostController::class)->middleware('auth'); 
->>>>>>> DoTienPhat
