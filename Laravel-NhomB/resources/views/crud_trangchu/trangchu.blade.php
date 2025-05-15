@@ -261,6 +261,9 @@
                         <button class="share-btn" onclick="sharePost({{ $post->id }})">
                             Chia sẻ (<span id="share-count-{{ $post->id }}">{{ $post->shares_count ?? 0 }}</span>)
                         </button>
+                        <span class="view-count" style="margin-left: 10px; color: #888; font-size: 14px;">
+                            👁️ <span id="view-count-{{ $post->id }}">{{ $post->views->count() }}</span> lượt xem
+                        </span>
                     </div>
                     <!-- Phần bình luận -->
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">

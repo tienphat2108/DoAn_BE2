@@ -43,13 +43,21 @@
                 </div>
                 <h2 class="interaction-title">Theo Dõi Lượt Xem</h2>
                 <div class="interaction-filters" style="display: flex; gap: 12px; margin-bottom: 24px;">
-                    <select class="interaction-select">
-                        <option>Tất cả bài viết</option>
-                        <option>Bài viết A</option>
-                        <option>Bài viết B</option>
-                        <option>Bài viết C</option>
-                    </select>
-                    <button class="interaction-filter-btn">Lọc</button>
+                    <form method="GET" style="display: flex; gap: 12px; align-items: center;">
+                        <select name="post_id" class="interaction-select">
+                            <option value="all">Tất cả bài viết</option>
+                            @foreach($allPosts as $p)
+                                <option value="{{ $p->id }}" {{ $selectedPostId == $p->id ? 'selected' : '' }}>{{ $p->title }}</option>
+                            @endforeach
+                        </select>
+                        <select name="time_range" class="interaction-select">
+                            <option value="all" {{ $selectedTimeRange == 'all' ? 'selected' : '' }}>Tất cả thời gian</option>
+                            <option value="today" {{ $selectedTimeRange == 'today' ? 'selected' : '' }}>Hôm nay</option>
+                            <option value="week" {{ $selectedTimeRange == 'week' ? 'selected' : '' }}>Tuần này</option>
+                            <option value="month" {{ $selectedTimeRange == 'month' ? 'selected' : '' }}>Tháng này</option>
+                        </select>
+                        <button class="interaction-filter-btn" type="submit">Lọc</button>
+                    </form>
                 </div>
                 <div class="interaction-table-wrapper">
                     <table class="interaction-table">
@@ -59,27 +67,19 @@
                                 <th>Lượt xem hôm nay</th>
                                 <th>Lượt xem tuần này</th>
                                 <th>Lượt xem tháng này</th>
+                                <th>Tổng lượt xem</th>
                             </tr>
                         </thead>
                         <tbody>
+                        @foreach($posts as $post)
                             <tr>
-                                <td>Bài viết A</td>
-                                <td>150</td>
-                                <td>30</td>
-                                <td>20</td>
+                                <td>{{ $post->title }}</td>
+                                <td>{{ $post->today_views ?? 0 }}</td>
+                                <td>{{ $post->week_views ?? 0 }}</td>
+                                <td>{{ $post->month_views ?? 0 }}</td>
+                                <td>{{ $post->all_views ?? $post->views->count() }}</td>
                             </tr>
-                            <tr>
-                                <td>Bài viết B</td>
-                                <td>220</td>
-                                <td>50</td>
-                                <td>35</td>
-                            </tr>
-                            <tr>
-                                <td>Bài viết C</td>
-                                <td>300</td>
-                                <td>80</td>
-                                <td>45</td>
-                            </tr>
+                        @endforeach
                         </tbody>
                     </table>
                 </div>
