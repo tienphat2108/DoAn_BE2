@@ -72,19 +72,17 @@ window.togglePostMenu = function(btn) {
     var postId = post.id.replace('post-', '');
     var menu = wrapper.querySelector('.post-menu');
     menu.innerHTML = '';
-    // Log debug
-    console.log('currentUserId:', window.currentUserId, typeof window.currentUserId);
-    console.log('profileUserId:', window.profileUserId, typeof window.profileUserId);
-    console.log('postOwnerId:', postOwnerId, typeof postOwnerId);
-    if (
-        window.currentUserId !== null &&
-        window.profileUserId !== null &&
-        Number(window.currentUserId) === Number(window.profileUserId)
-    ) {
-        menu.innerHTML += '<div onclick="editPost(' + postId + ')">Chỉnh sửa</div>';
-        menu.innerHTML += '<div onclick="deletePost(' + postId + ')">Xóa</div>';
+    if (!window.currentUserId) {
+        menu.innerHTML += '<div style="color:red;">Lỗi: Không lấy được user đăng nhập!</div>';
+    } else if (!postOwnerId) {
+        menu.innerHTML += '<div style="color:red;">Lỗi: Không lấy được user của bài viết!</div>';
     } else {
-        menu.innerHTML += '<div onclick="reportPost(' + postId + ')">Báo cáo</div>';
+        if (Number(window.currentUserId) === Number(postOwnerId)) {
+            menu.innerHTML += '<div onclick="editPost(' + postId + ')">Chỉnh sửa</div>';
+            menu.innerHTML += '<div onclick="deletePost(' + postId + ')">Xóa</div>';
+        } else {
+            menu.innerHTML += '<div onclick="reportPost(' + postId + ')">Báo cáo</div>';
+        }
     }
     menu.classList.toggle('active');
 };
