@@ -7,6 +7,7 @@
     <title>Trang chủ - Hệ thống quản lý bài đăng</title>
     <link rel="stylesheet" href="{{ asset('css/trangchu.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         /* Modal styles */
         .modal {
@@ -186,13 +187,16 @@
                 <div class="create-post-actions" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                     <div class="action-options" style="display:flex;gap:18px;align-items:center;">
                         <label for="post-media" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:500;color:#1877f2;"><i class="fas fa-photo-video photo-video"></i> Ảnh/Video</label>
-                        <span style="display:flex;align-items:center;gap:6px;color:#ff4444;"><i class="fas fa-map-marker-alt location-icon"></i> Thêm vị trí</span>
+                        <span style="display:flex;align-items:center;gap:6px;color:#ff4444;cursor:pointer;" onclick="showLocationModal()"><i class="fas fa-map-marker-alt location-icon"></i> Thêm vị trí</span>
                     </div>
                     <input type="file" id="post-media" name="media[]" accept="image/*,video/*" multiple style="display:none;" onchange="previewMedia(event)">
                     <button class="btn-post" type="submit" style="background:#1877f2;color:#fff;padding:10px 32px;border-radius:24px;font-weight:600;font-size:16px;border:none;box-shadow:0 2px 8px rgba(24,119,242,0.08);transition:background 0.2s;">Đăng bài</button>
                 </div>
                 <div id="media-preview" style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;"></div>
             </div>
+            <input type="hidden" id="post-latitude" name="latitude">
+            <input type="hidden" id="post-longitude" name="longitude">
+            <div id="location-display" style="display:none;color:#1976d2;font-weight:500;margin-top:8px;"></div>
         </form>
 
         <!-- Danh sách bài viết đã đăng -->
@@ -203,7 +207,12 @@
                         <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
                         <div class="post-info">
                             <h3>{{ $post->user->full_name ?? $post->user->username }}</h3>
-                            <span>{{ $post->created_at->diffForHumans() }}</span>
+                            <span>
+                                {{ $post->created_at->diffForHumans() }}
+                                @if($post->latitude && $post->longitude)
+                                    · <span class="location-name" data-lat="{{ $post->latitude }}" data-lng="{{ $post->longitude }}">Đang tải...</span>
+                                @endif
+                            </span>
                             @if($post->latitude && $post->longitude)
                                 <div class="post-location">
                                     <i class="fas fa-map-marker-alt"></i>
@@ -270,7 +279,20 @@
         </div>
     </div>
 
+    <!-- Modal chọn vị trí -->
+    <div id="locationModal" class="modal" style="display:none;z-index:99999;">
+        <div class="modal-content" style="width:400px;max-width:90vw;">
+            <h2>Chọn vị trí</h2>
+            <div id="leaflet-map" style="width:100%;height:300px;"></div>
+            <div id="modal-location-address" style="margin:10px 0;color:#1976d2;"></div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button confirm-button" onclick="confirmLocation()">Chọn vị trí này</button>
+                <button type="button" class="modal-button cancel-button" onclick="hideLocationModal()">Hủy</button>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ asset('js/trangchu.js') }}"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </body>
 </html>
