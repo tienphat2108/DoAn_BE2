@@ -35,7 +35,7 @@ class PostController extends Controller
     public function approvedPosts()
     {
         $posts = Post::where('status', 'approved')->orderBy('created_at', 'desc')->get();
-        return view('admin.baidaduyet', compact('posts'));
+        return view('admin.baiduyet', compact('posts'));
     }
 
     public function postSchedule()
@@ -73,4 +73,6 @@ class PostController extends Controller
         return redirect()->route('admin.quanlybainguoidung')
             ->with('success', 'Bài viết đã được tạo thành công.');
     }
+
+  
 } 

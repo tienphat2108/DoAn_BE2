@@ -11,4 +11,5 @@ class AdminCommentController extends Controller
         // $comments = Comment::all();
         return view('admin.quanlybinhluan'/*, compact('comments')*/);
     }
+  
 }  

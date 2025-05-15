@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use App\Http\Controllers\Admin\InteractionController;
 use App\Http\Controllers\Admin\AdminCommentController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\Admin\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,7 +56,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Các trang khác
     Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
-    Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
+    Route::get('/baiduyet', [AdminController::class, 'baiduyet'])->name('baiduyet');
     Route::get('/lichdangbai', [AdminPostController::class, 'postSchedule'])->name('lichdangbai');
     Route::get('/phantichtruycap', [AnalyticsController::class, 'index'])->name('phantichtruycap');
 });
@@ -97,3 +98,20 @@ Route::get('/admin/theodoiluotxem', function () {return view('admin.theodoiluotx
 Route::get('/admin/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('admin.xuatdulieu');
 Route::get('/admin/baocaohieusuat', function () {return view('admin.baocaohieusuat');})->name('admin.baocaohieusuat');
 Route::get('/admin/guithongbao', function () {return view('admin.guithongbao');})->name('admin.guithongbao');
+
+Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/kiemtrabaiviet', [AdminPostController::class, 'kiemTraBaiViet'])->name('admin.kiemtrabaiviet');
+    Route::get('/duabailenhethong', [AdminPostController::class, 'duaBaiLenHeThong'])->name('admin.duabailenhethong');
+    Route::get('/capnhattrangthai', [AdminPostController::class, 'capNhatTrangThai'])->name('admin.capnhattrangthai');
+});
+
+Route::get('/admin/baiduyet', [AdminController::class, 'baiduyet'])->name('admin.baiduyet');
+
+Route::get('/admin/sections/{section}', function($section) {
+    // Chỉ cho phép 4 section hợp lệ
+    if (!in_array($section, ['section1', 'section2', 'section3', 'section4'])) {
+        abort(404);
+    }
+    return view('admin.sections.' . $section)->render();
+});
+
