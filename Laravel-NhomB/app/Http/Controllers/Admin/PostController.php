@@ -28,8 +28,8 @@ class PostController extends Controller
 
     public function pendingPosts()
     {
-        $posts = Post::where('status', 'pending')->orderBy('created_at', 'desc')->get();
-        return view('admin.baichoduyet', compact('posts'));
+        $posts = Post::where('status', 'pending')->orderBy('created_at', 'desc')->paginate(10);
+        return view('admin.posts.pending', ['posts' => $posts]);
     }
 
     public function approvedPosts()
