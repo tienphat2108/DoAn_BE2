@@ -50,4 +50,9 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class, 'post_id');
     }
+
+    public function views()
+    {
+        return $this->hasMany('App\\Models\\PostView', 'post_id');
+    }
 }

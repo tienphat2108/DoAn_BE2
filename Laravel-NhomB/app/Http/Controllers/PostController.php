@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\Media;
+use App\Models\PostReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -172,5 +173,25 @@ class PostController extends Controller
                 'message' => 'Có lỗi xảy ra khi chia sẻ bài viết'
             ], 500);
         }
+    }
+
+    /**
+     * Xử lý báo cáo bài viết
+     */
+    public function report(Request $request, Post $post)
+    {
+        $user = Auth::user();
+        // Kiểm tra đã báo cáo chưa (1 user chỉ báo cáo 1 lần/post)
+        $exists = PostReport::where('post_id', $post->id)
+            ->where('user_id', $user->id)
+            ->exists();
+        if ($exists) {
+            return response()->json(['success' => false, 'message' => 'Bạn đã báo cáo bài viết này!'], 409);
+        }
+        PostReport::create([
+            'post_id' => $post->id,
+            'user_id' => $user->id,
+        ]);
+        return response()->json(['success' => true, 'message' => 'Đã báo cáo bài viết!']);
     }
 }

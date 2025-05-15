@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
     Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
+    Route::post('/posts/{post}/report', [PostController::class, 'report'])->name('posts.report')->middleware('auth');
 });
 
 // Admin Routes
@@ -102,7 +103,7 @@ Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(fu
 });
 
 Route::get('/admin/tuongtac', [InteractionController::class, 'index'])->name('admin.tuongtac');
-Route::get('/admin/theodoiluotxem', function () {return view('admin.theodoiluotxem');})->name('admin.theodoiluotxem');
+Route::get('/admin/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('admin.theodoiluotxem');
 Route::get('/admin/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('admin.xuatdulieu');
 Route::get('/admin/baocaohieusuat', function () {return view('admin.baocaohieusuat');})->name('admin.baocaohieusuat');
 Route::get('/admin/guithongbao', function () {return view('admin.guithongbao');})->name('admin.guithongbao');
