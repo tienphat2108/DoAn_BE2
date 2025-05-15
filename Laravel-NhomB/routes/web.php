@@ -89,6 +89,7 @@ Route::get('/admin/posts/pending', [PostController::class, 'pending']);
 // Route quản lý bài viết người dùng (CRUD cơ bản)
 Route::resource('posts', PostController::class)->middleware('auth');
 Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+Route::post('/posts/{id}/share', [PostController::class, 'share'])->name('posts.share')->middleware('auth');
 
 // Các route dành cho Admin
 Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(function () {

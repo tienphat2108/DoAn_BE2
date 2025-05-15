@@ -151,4 +151,26 @@ class PostController extends Controller
         $post->likes()->where('user_id', $user->id)->delete();
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Xử lý chia sẻ bài viết
+     */
+    public function share($id)
+    {
+        try {
+            $post = Post::findOrFail($id);
+            $post->increment('shares_count');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã cập nhật lượt chia sẻ',
+                'shares_count' => $post->shares_count
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi chia sẻ bài viết'
+            ], 500);
+        }
+    }
 }

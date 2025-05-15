@@ -17,7 +17,12 @@ class Post extends Model
         'title',
         'status',
         'user_id',
-        'scheduled_at'
+        'scheduled_at',
+        'shares_count'
+    ];
+
+    protected $attributes = [
+        'shares_count' => 0
     ];
 
     protected $dates = [

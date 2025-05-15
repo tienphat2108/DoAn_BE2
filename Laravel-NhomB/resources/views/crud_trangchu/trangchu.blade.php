@@ -258,6 +258,9 @@
                         <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
                             Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
                         </button>
+                        <button class="share-btn" onclick="sharePost({{ $post->id }})">
+                            Chia sẻ (<span id="share-count-{{ $post->id }}">{{ $post->shares_count ?? 0 }}</span>)
+                        </button>
                     </div>
                     <!-- Phần bình luận -->
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
@@ -420,6 +423,67 @@
             });
         }
     });
+
+    // Hàm chia sẻ bài viết
+    function sharePost(postId) {
+        // Tạo URL của bài viết
+        const postUrl = `${window.location.origin}/posts/${postId}`;
+        
+        // Kiểm tra xem trình duyệt có hỗ trợ Web Share API không
+        if (navigator.share) {
+            navigator.share({
+                title: 'Chia sẻ bài viết từ Fite',
+                text: 'Xem bài viết này trên Fite',
+                url: postUrl
+            })
+            .then(() => {
+                // Cập nhật số lượt chia sẻ
+                updateShareCount(postId);
+            })
+            .catch(error => {
+                console.log('Lỗi khi chia sẻ:', error);
+                fallbackShare(postUrl);
+            });
+        } else {
+            fallbackShare(postUrl);
+        }
+    }
+
+    // Hàm thay thế khi trình duyệt không hỗ trợ Web Share API
+    function fallbackShare(url) {
+        // Tạo một input ẩn để copy URL
+        const tempInput = document.createElement('input');
+        tempInput.value = url;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        alert('Đã sao chép liên kết bài viết vào clipboard!');
+    }
+
+    // Hàm cập nhật số lượt chia sẻ
+    function updateShareCount(postId) {
+        fetch(`/posts/${postId}/share`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const shareCountSpan = document.getElementById(`share-count-${postId}`);
+                if (shareCountSpan) {
+                    shareCountSpan.textContent = parseInt(shareCountSpan.textContent) + 1;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi khi cập nhật lượt chia sẻ:', error);
+        });
+    }
     </script>
 </body>
 </html>

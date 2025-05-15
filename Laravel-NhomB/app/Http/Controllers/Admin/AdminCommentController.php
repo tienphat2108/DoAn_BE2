@@ -34,4 +34,52 @@ class AdminCommentController extends Controller
 
         return view('admin.quanlybinhluan', compact('comments', 'posts', 'users'));
     }
+
+    /**
+     * Xóa bình luận
+     */
+    public function destroy($id)
+    {
+        try {
+            $comment = Comment::findOrFail($id);
+            $comment->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Bình luận đã được xóa thành công'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi xóa bình luận'
+            ], 500);
+        }
+    }
+
+    /**
+     * Cập nhật bình luận
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $comment = Comment::findOrFail($id);
+            
+            $request->validate([
+                'content' => 'required|string|max:1000'
+            ]);
+
+            $comment->content = $request->content;
+            $comment->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bình luận đã được cập nhật thành công'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật bình luận'
+            ], 500);
+        }
+    }
 }  
