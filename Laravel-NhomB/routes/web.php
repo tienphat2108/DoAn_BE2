@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/canhan/avatar', [TrangChuController::class, 'updateAvatar'])->name('canhan.avatar');
     Route::post('/canhan/password', [TrangChuController::class, 'updatePassword'])->name('canhan.password');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
+    Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
 });
 
 // Admin Routes

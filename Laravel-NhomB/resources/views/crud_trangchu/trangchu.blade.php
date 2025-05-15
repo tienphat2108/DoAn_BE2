@@ -202,6 +202,9 @@
         <!-- Danh sách bài viết đã đăng -->
         <div class="posts-list">
             @foreach($posts as $post)
+                @php
+                    $userLiked = $post->likes->contains('user_id', Auth::id());
+                @endphp
                 <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                     <div class="post-header">
                         <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
@@ -249,8 +252,8 @@
                         @endif
                     </div>
                     <div class="post-actions">
-                        <button onclick="likePost({{ $post->id }})">
-                            Thích ({{ $post->likes->count() }})
+                        <button class="like-btn{{ $userLiked ? ' liked' : '' }}" data-post-id="{{ $post->id }}" style="{{ $userLiked ? 'color:#1877f2;' : '' }}">
+                            Thích (<span id="like-count-{{ $post->id }}">{{ $post->likes->count() }}</span>)
                         </button>
                         <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
                             Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
@@ -367,6 +370,55 @@
                 commentsDiv.style.display = 'none';
             }
         });
+    });
+
+    // Xử lý like/unlike động cho nút Thích
+    document.querySelectorAll('.post-actions button').forEach(function(btn) {
+        if (btn.textContent.trim().startsWith('Thích')) {
+            btn.addEventListener('click', function() {
+                var postId = btn.getAttribute('data-post-id');
+                var likeCountSpan = btn.querySelector('span') || btn;
+                // Nếu chưa có span, tạo span cho số like
+                if (!likeCountSpan || likeCountSpan === btn) {
+                    var currentText = btn.textContent;
+                    var match = currentText.match(/Thích \((\d+)\)/);
+                    var current = match ? parseInt(match[1]) : 0;
+                    btn.innerHTML = 'Thích (<span id="like-count-' + postId + '">' + current + '</span>)';
+                    likeCountSpan = document.getElementById('like-count-' + postId);
+                }
+                var liked = btn.classList.contains('liked');
+                var url = '/posts/' + postId + '/like';
+                var method = liked ? 'DELETE' : 'POST';
+                fetch(url, {
+                    method: method,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        var current = parseInt(likeCountSpan.textContent);
+                        if (liked) {
+                            likeCountSpan.textContent = current > 0 ? current - 1 : 0;
+                            btn.classList.remove('liked');
+                            btn.style.color = '';
+                        } else {
+                            likeCountSpan.textContent = current + 1;
+                            btn.classList.add('liked');
+                            btn.style.color = '#1877f2';
+                        }
+                    } else {
+                        alert('Có lỗi khi thích bài viết!');
+                    }
+                })
+                .catch(err => {
+                    alert('Có lỗi khi thích bài viết!');
+                    console.error('AJAX like error:', err);
+                });
+            });
+        }
     });
     </script>
 </body>

@@ -133,4 +133,22 @@ class PostController extends Controller
         $post->save();
         return redirect()->back()->with('info', 'Đã gửi yêu cầu chỉnh sửa.');
     }
+
+    // Xử lý like bài viết
+    public function like(Post $post)
+    {
+        $user = auth()->user();
+        if (!$post->likes()->where('user_id', $user->id)->exists()) {
+            $post->likes()->create(['user_id' => $user->id]);
+        }
+        return response()->json(['success' => true]);
+    }
+
+    // Xử lý bỏ like bài viết
+    public function unlike(Post $post)
+    {
+        $user = auth()->user();
+        $post->likes()->where('user_id', $user->id)->delete();
+        return response()->json(['success' => true]);
+    }
 }
