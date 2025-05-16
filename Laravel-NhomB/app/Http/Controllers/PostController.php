@@ -50,6 +50,7 @@ class PostController extends Controller
             'title' => $request->title,
             'user_id' => $user->id,
             'status' => 'pending',
+            'content' => $request->content,
         ]);
         // Lưu media nếu có
         if ($request->hasFile('media')) {

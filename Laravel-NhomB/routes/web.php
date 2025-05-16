@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\TrangChuController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\PostHistoryController;
 use Illuminate\View\View;
 use App\Http\Controllers\Admin\InteractionController;
 use App\Http\Controllers\Admin\AdminCommentController;
@@ -71,22 +72,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
     Route::get('/lichdangbai', [AdminPostController::class, 'postSchedule'])->name('lichdangbai');
     Route::get('/phantichtruycap', [AnalyticsController::class, 'index'])->name('phantichtruycap');
-    Route::get('/tuongtac', [InteractionController::class, 'index'])->name('tuongtac');
-    Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
-    Route::get('/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('xuatdulieu');
-    Route::get('/baocaohieusuat', function () {return view('admin.baocaohieusuat');})->name('baocaohieusuat');
-    Route::get('/guithongbao', function () {return view('admin.guithongbao');})->name('guithongbao');
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
-
-    // Quản lý bình luận
-    Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
-    Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
-    Route::put('/comments/{id}', [AdminCommentController::class, 'update'])->name('comments.update');
     
-    Route::get('/posts/{post}', [\App\Http\Controllers\Admin\PostApprovalController::class, 'show'])->name('posts.show');
-    Route::post('/posts/{post}/request-edit', [\App\Http\Controllers\Admin\PostApprovalController::class, 'requestEdit'])->name('posts.request-edit');
+    // Lịch sử đăng bài
+    Route::get('/post-history', [PostHistoryController::class, 'index'])->name('post-history');
+    Route::post('/api/post-history/filter', [PostHistoryController::class, 'filter'])->name('post-history.filter');
 });
 
 // Redirect root to login
