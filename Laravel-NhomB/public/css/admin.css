@@ -1,0 +1,464 @@
+/* Admin CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #ffffff;
+}
+
+.admin-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.admin-header {
+    background-color: #ffffff;
+    color: #000;
+    padding: 25px 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+    height: 80px;
+    justify-content: space-between;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    left: 20px;
+}
+
+.logo img {
+    width: 40px;
+    height: 40px;
+}
+
+.admin-header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    position: absolute;
+    left: 120px;
+    letter-spacing: 0.5px;
+}
+
+/* Thêm style cho container của tiêu đề */
+.header-title {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 120px;
+    height: 100%;
+}
+
+.header-title img {
+    width: 30px;
+    height: 30px;
+}
+
+.admin-info {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-name {
+    font-weight: bold;
+    color: #1976d2;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+}
+
+.btn-logout {
+    background-color: #000;
+    color: #fff;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.admin-content {
+    display: flex;
+    flex: 1;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px 0;
+}
+
+.admin-menu {
+    list-style: none;
+}
+
+.admin-menu li {
+    padding: 15px 20px;
+    margin: 5px 10px;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+}
+
+.admin-menu li:hover, .admin-menu li.active {
+    background-color: #e3f2fd;
+}
+
+.admin-menu li.active a {
+    color: #1976d2;
+}
+
+.admin-menu a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+}
+
+.admin-main {
+    flex: 1;
+    padding: 20px;
+}
+
+.admin-main h2 {
+    color: #000;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+    padding: 10px;
+    background-color: #000;
+    color: #fff;
+}
+
+.admin-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.btn-add-user {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.btn-add-user:hover {
+    background-color: #2980b9;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-box input {
+    border: none;
+    padding: 10px 15px;
+    width: 250px;
+    outline: none;
+}
+
+.search-box button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.table-users {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    overflow: hidden;
+}
+
+.table-users th, .table-users td {
+    padding: 16px 18px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+}
+
+.table-users th {
+    background-color: #f5f5f5;
+    font-weight: 700;
+    color: #1976d2;
+    text-align: center;
+    font-size: 16px;
+}
+
+.table-users td {
+    text-align: center;
+}
+
+.table-users td.user-name-cell, .table-users th.user-name-cell {
+    text-align: left;
+    padding-left: 32px;
+}
+
+.table-users td:last-child, .table-users th:last-child {
+    text-align: center;
+}
+
+.table-users td .btn-delete {
+    margin: 0 auto;
+    display: block;
+}
+
+.table-users tr:last-child td {
+    border-bottom: none;
+}
+
+.table-users tbody tr:hover {
+    background-color: #e3f2fd;
+    transition: background 0.2s;
+}
+
+.user-name-cell {
+    font-weight: bold;
+    color: #1976d2;
+    font-size: 16px;
+}
+
+.action-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+}
+
+.btn-approve, .btn-delete {
+    padding: 8px 22px;
+    border: 1px solid #1976d2;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+.btn-approve {
+    background: #1976d2;
+    color: #fff;
+}
+.btn-approve:hover {
+    background: #1565c0;
+    color: #fff;
+}
+
+.btn-delete {
+    background: #fff;
+    color: #1976d2;
+}
+.btn-delete:hover {
+    background: #fbe9e7;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+}
+
+/* Pagination styles */
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a {
+    color: #000;
+    text-decoration: none;
+    padding: 5px 10px;
+    margin: 0 5px;
+}
+
+.pagination a:hover {
+    text-decoration: underline;
+}
+
+/* Status styles */
+.status-pending {
+    color: #f57c00;
+}
+
+.status-approved {
+    color: #43a047;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal h2 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.confirm-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.confirm-button:hover {
+    background-color: #c82333;
+}
+
+.cancel-button {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
+}
+
+/* Interaction page custom styles */
+.interaction-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.interaction-btn {
+    background: #e5e5e5;
+    color: #222;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.interaction-btn.selected, .interaction-btn.active {
+    background: #111;
+    color: #fff;
+}
+.interaction-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 18px;
+    margin-top: 0;
+    color: #111;
+    text-align: left;
+}
+.interaction-filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.interaction-select {
+    border: 1px solid #888;
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-size: 15px;
+    background: #fff;
+    color: #222;
+}
+.interaction-filter-btn {
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: #f5f5f5;
+    color: #222;
+    padding: 7px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.interaction-filter-btn:hover {
+    background: #e0e0e0;
+}
+.interaction-table-wrapper {
+    margin-top: 16px;
+}
+.interaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+.interaction-table th, .interaction-table td {
+    border: 2px solid #888;
+    padding: 16px 0;
+    text-align: center;
+    font-size: 16px;
+}
+.interaction-table th {
+    background: #e5e5e5;
+    font-weight: bold;
+}
+.interaction-table td {
+    background: #fff;
+} 
+
+.comment-item button {
+    padding: 10px 24px;
+    font-size: 16px;
+    margin: 0 6px 6px 0;
+    border-radius: 6px;
+    border: none;
+    background: #e0e0e0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.comment-item button:hover {
+    background: #bdbdbd;
+}
