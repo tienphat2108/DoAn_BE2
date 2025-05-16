@@ -47,6 +47,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/report', [PostController::class, 'report'])->name('posts.report')->middleware('auth');
 });
 
+// Route bình luận cho user thường (phải đặt ngoài group admin)
+Route::post('/comments', [CommentController::class, 'store'])->name('comments.store')->middleware('auth');
+
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Quản lý người dùng
@@ -81,8 +84,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
     Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
     Route::put('/comments/{id}', [AdminCommentController::class, 'update'])->name('comments.update');
-    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
-
+    
     Route::get('/posts/{post}', [\App\Http\Controllers\Admin\PostApprovalController::class, 'show'])->name('posts.show');
     Route::post('/posts/{post}/request-edit', [\App\Http\Controllers\Admin\PostApprovalController::class, 'requestEdit'])->name('posts.request-edit');
 });
