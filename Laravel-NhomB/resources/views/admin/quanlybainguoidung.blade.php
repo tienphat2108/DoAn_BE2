@@ -75,8 +75,10 @@
                                 </td>
                                 <td>{{ $post->title }}</td>
                                 <td>
-                                    @if($post->status == 'pending')
+                                    @if($post->status == 'waiting')
                                         Yêu cầu duyệt
+                                    @elseif($post->status == 'pending')
+                                        Chờ duyệt
                                     @elseif($post->status == 'approved')
                                         Đã duyệt
                                     @else
@@ -85,16 +87,18 @@
                                 </td>
                                 <td>{{ $post->created_at->format('d/m/Y') }}</td>
                                 <td class="action-cell">
-                                    @if($post->status == 'pending')
-                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block;">
+                                    @if($post->status == 'waiting')
+                                        <form action="{{ route('admin.sendToPending', $post->id) }}" method="POST" style="display: inline-block;">
                                             @csrf
-                                            <button type="submit" class="btn-approve">Gửi</button>
+                                            <button type="submit" class="btn-approve" style="background:#28a745; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-size:15px; display:inline-flex; align-items:center; gap:6px;">
+                                                <span style="font-weight:bold; font-size:18px;">&#10148;</span> Gửi
+                                            </button>
                                         </form>
                                     @endif
                                     <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn-delete">Xóa</button>
+                                        <button type="submit" class="btn-outline-delete">Xóa</button>
                                     </form>
                                 </td>
                             </tr>

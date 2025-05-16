@@ -10,7 +10,7 @@ class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::orderBy('created_at', 'desc')->get();
+        $posts = Post::with('media')->orderBy('created_at', 'desc')->paginate(10);
         return view('admin.quanlybainguoidung', compact('posts'));
     }
 
@@ -20,10 +20,37 @@ class PostController extends Controller
         return back()->with('success', 'Đã duyệt bài viết thành công.');
     }
 
+    public function reject(Request $request, Post $post)
+    {
+        $request->validate([
+            'note' => 'required|string',
+        ]);
+        $post->update([
+            'status' => 'rejected',
+            'admin_note' => $request->note
+        ]);
+        return back()->with('error', 'Bài viết đã bị từ chối.');
+    }
+
+    public function requestEdit(Request $request, Post $post)
+    {
+        $request->validate([
+            'edit_reason' => 'required|string|min:10'
+        ]);
+        $post->update([
+            'status' => 'needs_edit',
+            'edit_reason' => $request->edit_reason
+        ]);
+        return back()->with('info', 'Đã gửi yêu cầu chỉnh sửa bài viết.');
+    }
+
     public function destroy(Post $post)
     {
-        $post->delete();
-        return back()->with('success', 'Đã xóa bài viết thành công.');
+        if ($post->status === 'approved') {
+            $post->delete();
+            return back()->with('success', 'Đã xóa bài viết thành công.');
+        }
+        return back()->with('error', 'Chỉ có thể xóa bài viết đã được duyệt.');
     }
 
     public function pendingPosts()
@@ -72,5 +99,14 @@ class PostController extends Controller
 
         return redirect()->route('admin.quanlybainguoidung')
             ->with('success', 'Bài viết đã được tạo thành công.');
+    }
+
+    public function sendToPending(Post $post)
+    {
+        if ($post->status === 'waiting') {
+            $post->update(['status' => 'pending']);
+            return back()->with('success', 'Bài viết đã chuyển sang chờ duyệt.');
+        }
+        return back()->with('error', 'Chỉ có thể gửi bài ở trạng thái yêu cầu duyệt.');
     }
 } 

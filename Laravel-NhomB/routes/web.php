@@ -57,6 +57,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/quanlybainguoidung', [AdminPostController::class, 'index'])->name('quanlybainguoidung');
     Route::post('/quanlybainguoidung/{post}/approve', [AdminPostController::class, 'approve'])->name('approvePost');
     Route::delete('/quanlybainguoidung/{post}', [AdminPostController::class, 'destroy'])->name('deletePost');
+    Route::post('/quanlybainguoidung/{post}/pending', [AdminPostController::class, 'sendToPending'])->name('sendToPending');
     
     // Quản lý bài viết chờ duyệt
     Route::get('/pending-posts', [PostApprovalController::class, 'index'])->name('pending-posts');

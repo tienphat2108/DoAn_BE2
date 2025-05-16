@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('post_media', function (Blueprint $table) {
-            $table->id('media_id');
+            $table->id();
             $table->foreignId('post_id')->constrained('posts')->onDelete('cascade');
             $table->string('file_url');
             $table->string('file_type');

@@ -28,23 +28,23 @@
             </div>
         @endif
         <div class="mt-3">
-            @if($post->status === 'pending')
+            @if($post->status === 'pending' || $post->status === 'waiting')
                 <form action="{{ route('admin.posts.approve', $post) }}" method="POST" style="display:inline-block;">
                     @csrf
-                    <button type="submit" class="btn btn-success">Duyệt</button>
+                    <button type="submit" class="btn btn-success" style="background:#28a745; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-size:16px; display:inline-flex; align-items:center; gap:6px;">
+                        <span style="font-weight:bold; font-size:18px;">&#10003;</span> Duyệt
+                    </button>
                 </form>
-                <form action="{{ route('admin.posts.reject', $post) }}" method="POST" style="display:inline-block;">
+                <form action="{{ route('admin.posts.reject', $post) }}" method="POST" style="display:inline-block; margin-left:8px;">
                     @csrf
-                    <button type="submit" class="btn btn-danger">Từ chối</button>
+                    <button type="submit" class="btn btn-danger" style="background:#dc3545; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-size:16px; display:inline-flex; align-items:center; gap:6px;">
+                        <span style="font-weight:bold; font-size:18px;">&#10007;</span> Từ chối
+                    </button>
                 </form>
-                <form action="{{ route('admin.posts.request-edit', $post) }}" method="POST" style="display:inline-block; margin-left: 10px;">
-                    @csrf
-                    <input type="text" name="edit_reason" placeholder="Lý do chỉnh sửa" required style="width:200px;">
-                    <button type="submit" class="btn btn-warning">Yêu cầu chỉnh sửa</button>
-                </form>
+                <a href="{{ url()->previous() }}" class="btn btn-secondary" style="display:inline-block; margin-left: 10px;">Trở về</a>
             @endif
             @if($post->status === 'approved')
-                <form action="{{ route('admin.posts.destroy', $post) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
+                <form action="{{ route('admin.deletePost', $post) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">Xóa</button>
