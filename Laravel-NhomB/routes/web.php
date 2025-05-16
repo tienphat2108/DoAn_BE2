@@ -101,3 +101,6 @@ Route::get('/', function () {
 Route::resource('posts', PostController::class)->middleware('auth');
 Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 Route::post('/posts/{id}/share', [PostController::class, 'share'])->name('posts.share')->middleware('auth');
+
+// Route cho bình luận (dành cho user)
+Route::post('/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');

@@ -275,7 +275,7 @@
                             </div>
                         @endforeach
                         @if(Auth::check())
-                            <form class="comment-form" action="/admin/comments" method="POST" style="margin-top: 8px;">
+                            <form class="comment-form" action="{{ route('comments.store') }}" method="POST" style="margin-top: 8px;">
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->id }}">
                                 <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>

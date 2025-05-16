@@ -48,7 +48,7 @@ class Post extends Model
 
     public function comments()
     {
-        return $this->hasMany(Comment::class, 'post_id');
+        return $this->hasMany(\App\Models\PostComment::class, 'post_id');
     }
 
     public function views()

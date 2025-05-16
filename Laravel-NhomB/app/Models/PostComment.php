@@ -9,6 +9,7 @@ class PostComment extends Model
 {
     use HasFactory;
 
+    protected $table = 'post_comments';
     protected $primaryKey = 'comment_id';
     public $incrementing = true;
 
