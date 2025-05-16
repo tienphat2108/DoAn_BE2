@@ -47,7 +47,6 @@
                         </thead>
                         <tbody>
                             @foreach($users as $user)
-                                @if(!$user->is_admin)
                                 <tr>
                                     <td>{{ $user->id }}</td>
                                     <td class="user-name-cell">{{ $user->name }}</td>
@@ -61,7 +60,6 @@
                                         </form>
                                     </td>
                                 </tr>
-                                @endif
                             @endforeach
                         </tbody>
                     </table>

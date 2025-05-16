@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\PostHistory;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -17,11 +18,28 @@ class PostController extends Controller
     public function approve(Post $post)
     {
         $post->update(['status' => 'approved']);
+        
+        // Ghi lại lịch sử
+        PostHistory::create([
+            'post_id' => $post->id,
+            'user_id' => auth()->id(),
+            'action' => 'publish',
+            'details' => 'Bài viết đã được duyệt và đăng'
+        ]);
+        
         return back()->with('success', 'Đã duyệt bài viết thành công.');
     }
 
     public function destroy(Post $post)
     {
+        // Ghi lại lịch sử trước khi xóa
+        PostHistory::create([
+            'post_id' => $post->id,
+            'user_id' => auth()->id(),
+            'action' => 'cancel',
+            'details' => 'Bài viết đã bị hủy'
+        ]);
+        
         $post->delete();
         return back()->with('success', 'Đã xóa bài viết thành công.');
     }
@@ -56,6 +74,14 @@ class PostController extends Controller
 
         $validated['user_id'] = auth()->id();
         $post = Post::create($validated);
+
+        // Ghi lại lịch sử
+        PostHistory::create([
+            'post_id' => $post->id,
+            'user_id' => auth()->id(),
+            'action' => 'create',
+            'details' => 'Bài viết mới được tạo'
+        ]);
 
         // Lưu media nếu có
         if ($request->hasFile('media')) {

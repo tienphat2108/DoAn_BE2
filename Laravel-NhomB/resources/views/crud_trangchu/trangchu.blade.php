@@ -241,12 +241,12 @@
                         <p>{{ $post->content }}</p>
                         @if($post->media->isNotEmpty())
                             @foreach($post->media as $media)
-                                @if(str_contains($media->file_url, '.mp4'))
-                                    <video controls>
+                                @if(str_contains($media->file_type, 'video'))
+                                    <video controls style="max-width: 100%; max-height: 320px; border-radius: 8px; margin-top: 10px;">
                                         <source src="{{ asset('storage/' . $media->file_url) }}" type="video/mp4">
                                     </video>
                                 @else
-                                    <img src="{{ asset('storage/' . $media->file_url) }}" alt="Media">
+                                    <img src="{{ asset('storage/' . $media->file_url) }}" alt="Media" style="max-width: 100%; max-height: 320px; border-radius: 8px; margin-top: 10px; object-fit: contain;">
                                 @endif
                             @endforeach
                         @endif
@@ -275,7 +275,11 @@
                             </div>
                         @endforeach
                         @if(Auth::check())
+<<<<<<< HEAD
                             <form class="comment-form" action="{{ route('comments.store') }}" method="POST" style="margin-top: 8px;">
+=======
+                            <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
+>>>>>>> origin/master
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->id }}">
                                 <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>

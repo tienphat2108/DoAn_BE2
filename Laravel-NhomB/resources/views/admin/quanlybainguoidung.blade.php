@@ -34,7 +34,20 @@
 
             <div class="admin-main">
                 <h2>ADMIN quản lý bài đăng</h2>
-                
+                <!-- Bộ lọc và Tìm kiếm -->
+                <div class="filter-bar" style="display: flex; justify-content: center; align-items: center; gap: 18px; margin-bottom: 24px; flex-wrap: wrap;">
+                    <select class="filter-select">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="pending">Chờ duyệt</option>
+                        <option value="approved">Đã duyệt</option>
+                        <option value="canceled">Đã hủy</option>
+                        <option value="draft">Bản nháp</option>
+                    </select>
+                 
+                    <input type="text" class="filter-search" placeholder="Tìm kiếm...">
+                    <button class="filter-btn">Tìm kiếm</button>
+                </div>
+
                 @if(session('success'))
                     <div class="alert alert-success">
                         {{ session('success') }}
@@ -147,5 +160,38 @@
             }
         }
     </script>
+
+    <style>
+        .filter-bar select, .filter-bar input[type="date"], .filter-bar .filter-search {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            margin-right: 0;
+            outline: none;
+            min-width: 140px;
+        }
+        .filter-bar .filter-search {
+            min-width: 200px;
+        }
+        .filter-bar .filter-btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            background: #222;
+            color: #fff;
+            font-weight: 600;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .filter-bar .filter-btn:hover {
+            background: #444;
+        }
+        @media (max-width: 900px) {
+            .filter-bar { flex-direction: column; gap: 10px; }
+            .filter-bar select, .filter-bar input, .filter-bar .filter-btn { width: 100%; min-width: 0; }
+        }
+    </style>
 </body>
 </html> 
