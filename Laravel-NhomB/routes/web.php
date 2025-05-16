@@ -36,7 +36,7 @@ Route::post('/register', [RegisterController::class, 'register']);
 
 // User Routes
 Route::middleware('auth')->group(function () {
-    Route::get('/home', [TrangChuController::class, 'index'])->name('trangchu');
+    // Route::get('/home', [TrangChuController::class, 'index'])->name('trangchu'); // Đã comment để tránh trùng tên
     Route::get('/trangchu', [TrangChuController::class, 'index'])->name('trangchu');
     Route::get('/canhan', [TrangChuController::class, 'canhan'])->name('canhan');
     Route::post('/canhan/avatar', [TrangChuController::class, 'updateAvatar'])->name('canhan.avatar');
@@ -84,6 +84,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 
     Route::get('/posts/{post}', [\App\Http\Controllers\Admin\PostApprovalController::class, 'show'])->name('posts.show');
+    Route::post('/posts/{post}/request-edit', [\App\Http\Controllers\Admin\PostApprovalController::class, 'requestEdit'])->name('posts.request-edit');
 });
 
 // Redirect root to login
