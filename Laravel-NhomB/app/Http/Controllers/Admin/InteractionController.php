@@ -11,12 +11,12 @@ class InteractionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Post::with(['user', 'likes', 'comments'])
+        $query = Post::with(['user', 'likes', 'postComments'])
             ->select('posts.*')
             ->selectRaw('COUNT(DISTINCT post_likes.like_id) as likes_count')
-            ->selectRaw('COUNT(DISTINCT comments.id) as comments_count')
+            ->selectRaw('COUNT(DISTINCT post_comments.id) as comments_count')
             ->leftJoin('post_likes', 'posts.id', '=', 'post_likes.post_id')
-            ->leftJoin('comments', 'posts.id', '=', 'comments.post_id')
+            ->leftJoin('post_comments', 'posts.id', '=', 'post_comments.post_id')
             ->groupBy('posts.id');
 
         // Lọc theo người dùng
@@ -47,23 +47,9 @@ class InteractionController extends Controller
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
         
-        switch ($sortBy) {
-            case 'likes':
-                $query->orderBy('likes_count', $sortOrder);
-                break;
-            case 'comments':
-                $query->orderBy('comments_count', $sortOrder);
-                break;
-            case 'shares':
-                $query->orderBy('shares_count', $sortOrder);
-                break;
-            default:
-                $query->orderBy('posts.created_at', $sortOrder);
-        }
-
-        $posts = $query->paginate(10);
+        $posts = $query->orderBy($sortBy, $sortOrder)->paginate(10);
         $users = User::all();
 
-        return view('admin.quanlytuongtac', compact('posts', 'users'));
+        return view('admin.interactions', compact('posts', 'users'));
     }
 }

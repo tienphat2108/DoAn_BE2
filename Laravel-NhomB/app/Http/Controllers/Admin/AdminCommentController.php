@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Comment;
+use App\Models\PostComment;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -11,7 +11,7 @@ class AdminCommentController extends Controller
 {
     public function index(Request $request) 
     {
-        $query = Comment::with(['user', 'post']);
+        $query = PostComment::with(['user', 'post']);
 
         // Lọc theo bài viết nếu có
         if ($request->has('post_id') && $request->post_id != 'all') {
@@ -41,7 +41,7 @@ class AdminCommentController extends Controller
     public function destroy($id)
     {
         try {
-            $comment = Comment::findOrFail($id);
+            $comment = PostComment::findOrFail($id);
             $comment->delete();
             
             return response()->json([
@@ -62,7 +62,7 @@ class AdminCommentController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $comment = Comment::findOrFail($id);
+            $comment = PostComment::findOrFail($id);
             
             $request->validate([
                 'content' => 'required|string|max:1000'

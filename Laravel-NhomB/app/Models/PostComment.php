@@ -9,7 +9,8 @@ class PostComment extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'comment_id';
+    protected $table = 'post_comments';
+    protected $primaryKey = 'id';
     public $incrementing = true;
 
     protected $fillable = [
@@ -18,13 +19,13 @@ class PostComment extends Model
         'content'
     ];
 
-    public function post()
-    {
-        return $this->belongsTo(Post::class, 'post_id');
-    }
-
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
+    }
+
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
     }
 } 
