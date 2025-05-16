@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'avatar_url')) {
-                $table->string('avatar_url')->default('/images/default-avatar.png');
+                $table->string('avatar_url')->nullable()->after('password');
             }
         });
     }

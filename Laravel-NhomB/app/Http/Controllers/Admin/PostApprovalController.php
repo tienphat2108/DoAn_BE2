@@ -29,7 +29,7 @@ class PostApprovalController extends Controller
     public function approve(Post $post)
     {
         $post->update(['status' => 'approved']);
-        return redirect()->back()->with('success', 'Bài viết đã được duyệt thành công');
+        return redirect()->route('admin.baichoduyet')->with('success', 'Bài viết đã được duyệt thành công');
     }
 
     public function reject(Post $post)
@@ -45,23 +45,5 @@ class PostApprovalController extends Controller
             return redirect()->back()->with('success', 'Bài viết đã được xóa thành công');
         }
         return redirect()->back()->with('error', 'Chỉ có thể xóa bài viết đã được duyệt');
-    }
-
-    public function requestEdit(Request $request, Post $post)
-    {
-        $request->validate([
-            'edit_reason' => 'required|string|min:10'
-        ]);
-
-        // Gửi email thông báo cho người dùng
-        Mail::to($post->user->email)->send(new PostEditRequest($post, $request->edit_reason));
-
-        // Cập nhật trạng thái bài viết
-        $post->update([
-            'status' => 'needs_edit',
-            'edit_reason' => $request->edit_reason
-        ]);
-
-        return redirect()->back()->with('success', 'Yêu cầu chỉnh sửa đã được gửi đến người dùng');
     }
 } 

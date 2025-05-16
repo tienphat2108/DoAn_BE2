@@ -282,6 +282,47 @@ body {
     border: 1px solid #d32f2f;
 }
 
+/* Nút Xóa kiểu outline xanh, hover đỏ nhạt */
+.btn-outline-delete, .btn-outline-delete:visited {
+    background: #fff;
+    color: #1976d2;
+    border: 2px solid #1976d2;
+    border-radius: 8px;
+    padding: 8px 22px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    text-decoration: none;
+}
+.btn-outline-delete:hover {
+    background: #ffeaea;
+    color: #d32f2f;
+    border: 2px solid #d32f2f;
+    text-decoration: none;
+}
+
+/* Nút Xem chi tiết kiểu outline xanh, hover xanh nhạt */
+.btn-outline-info {
+    background: #fff;
+    color: #1976d2;
+    border: 2px solid #1976d2;
+    border-radius: 8px;
+    padding: 8px 22px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-outline-info:hover {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 2px solid #1565c0;
+}
+
 /* Pagination styles */
 .pagination {
     margin-top: 20px;

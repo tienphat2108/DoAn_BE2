@@ -23,7 +23,7 @@ class PostController extends Controller
     // Danh sách bài viết chờ duyệt hoặc bản nháp
     public function pending()
     {
-        $posts = Post::whereIn('status', ['bản nháp', 'yêu cầu duyệt'])->paginate(10);
+        $posts = Post::where('status', 'pending')->paginate(10);
         return view('admin.posts.pending', compact('posts'));
     }
 
@@ -49,7 +49,7 @@ class PostController extends Controller
         $post = Post::create([
             'title' => $request->title,
             'user_id' => $user->id,
-            'status' => 'pending',
+            'status' => 'waiting',
         ]);
         // Lưu media nếu có
         if ($request->hasFile('media')) {

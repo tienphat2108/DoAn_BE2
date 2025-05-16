@@ -33,22 +33,24 @@
                 <td>{{ Str::limit($post->content, 100) }}</td>
                 <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                 <td>
-                    <div class="btn-group" role="group">
-                        <a href="{{ route('admin.posts.show', $post) }}" class="btn btn-info btn-sm">
+                    <div class="btn-group" role="group" style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                        <a href="{{ route('admin.posts.show', $post) }}" class="btn-outline-delete" style="width: 220px; text-align: center; justify-content: center;">
                             <i class="fas fa-eye"></i> Xem chi tiết
                         </a>
-                        <form action="{{ route('admin.posts.approve', $post) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="fas fa-check"></i> Duyệt
-                            </button>
-                        </form>
-                        <form action="{{ route('admin.posts.reject', $post) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">
-                                <i class="fas fa-times"></i> Từ chối
-                            </button>
-                        </form>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <form action="{{ route('admin.posts.approve', $post) }}" method="POST" class="d-inline" style="display:inline-block;">
+                                @csrf
+                                <button type="submit" class="btn btn-success btn-sm" style="background:#28a745; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-size:15px; display:inline-flex; align-items:center; gap:6px;">
+                                    <span style="font-weight:bold; font-size:18px;">&#10003;</span> Duyệt
+                                </button>
+                            </form>
+                            <form action="{{ route('admin.posts.reject', $post) }}" method="POST" class="d-inline" style="display:inline-block;">
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-sm" style="background:#dc3545; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-size:15px; display:inline-flex; align-items:center; gap:6px;">
+                                    <span style="font-weight:bold; font-size:18px;">&#10007;</span> Từ chối
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </td>
             </tr>
