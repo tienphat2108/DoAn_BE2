@@ -58,8 +58,9 @@ class PostController extends Controller
 
     public function postSchedule()
     {
-        $posts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
-        return view('admin.lichdangbai', compact('posts'));
+        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
+        $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->paginate(20);
+        return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories'));
     }
 
     public function store(Request $request)

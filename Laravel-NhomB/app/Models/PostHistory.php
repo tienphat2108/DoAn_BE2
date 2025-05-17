@@ -9,18 +9,9 @@ class PostHistory extends Model
 {
     use HasFactory;
 
-<<<<<<< HEAD:Laravel-NhomB/app/Models/PostComment.php
-    protected $table = 'post_comments';
-    protected $primaryKey = 'comment_id';
-    public $incrementing = true;
-
-=======
->>>>>>> origin/master:Laravel-NhomB/app/Models/PostHistory.php
+    protected $table = 'post_histories';
     protected $fillable = [
-        'post_id',
-        'user_id',
-        'action',
-        'details'
+        'post_id', 'user_id', 'action', 'details'
     ];
 
     public function post()

@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\AdminCommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\PostApprovalController;
+use App\Models\Post;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +78,36 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Lịch sử đăng bài
     Route::get('/post-history', [PostHistoryController::class, 'index'])->name('post-history');
     Route::post('/api/post-history/filter', [PostHistoryController::class, 'filter'])->name('post-history.filter');
+
+    // Quản lý bình luận
+    Route::get('/quanlybinhluan', [App\Http\Controllers\Admin\AdminCommentController::class, 'index'])->name('quanlybinhluan');
+
+    // Phân tích tương tác
+    Route::get('/tuongtac', [App\Http\Controllers\Admin\InteractionController::class, 'index'])->name('tuongtac');
+
+    // Theo dõi lượt xem
+    Route::get('/theodoiluotxem', function(Request $request) {
+        $allPosts = Post::all();
+        $selectedPostId = $request->input('post_id', null);
+        $selectedTimeRange = $request->input('time_range', null);
+        $posts = collect(); // hoặc logic lấy danh sách bài viết phù hợp nếu có
+        return view('admin.theodoiluotxem', compact('allPosts', 'selectedPostId', 'selectedTimeRange', 'posts'));
+    })->name('theodoiluotxem');
+
+    // Xuất dữ liệu
+    Route::get('/xuatdulieu', function() {
+        return view('admin.xuatdulieu');
+    })->name('xuatdulieu');
+
+    // Báo cáo hiệu suất
+    Route::get('/baocaohieusuat', function() {
+        return view('admin.baocaohieusuat');
+    })->name('baocaohieusuat');
+
+    // Gửi thông báo
+    Route::get('/guithongbao', function() {
+        return view('admin.guithongbao');
+    })->name('guithongbao');
 });
 
 // Redirect root to login

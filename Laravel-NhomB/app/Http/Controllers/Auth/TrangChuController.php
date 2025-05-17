@@ -57,6 +57,7 @@ class TrangChuController extends Controller
         if (Schema::hasTable('posts')) {
             $posts = Post::with(['user', 'media', 'likes', 'comments.user'])
                         ->where('user_id', $user->id)
+                        ->where('status', 'approved')
                         ->latest()
                         ->get();
         } else {
