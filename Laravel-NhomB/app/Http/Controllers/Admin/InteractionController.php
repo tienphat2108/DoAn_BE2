@@ -13,11 +13,11 @@ class InteractionController extends Controller
     {
         $query = Post::with(['user', 'likes', 'comments'])
             ->select('posts.*')
-            ->selectRaw('COUNT(DISTINCT post_likes.like_id) as likes_count')
+            ->selectRaw('COUNT(DISTINCT post_likes.id) as likes_count')
             ->selectRaw('COUNT(DISTINCT comments.id) as comments_count')
             ->leftJoin('post_likes', 'posts.id', '=', 'post_likes.post_id')
             ->leftJoin('comments', 'posts.id', '=', 'comments.post_id')
-            ->groupBy('posts.id');
+            ->groupBy('posts.id', 'posts.user_id', 'posts.title', 'posts.content', 'posts.latitude', 'posts.longitude', 'posts.status', 'posts.scheduled_at', 'posts.shares_count', 'posts.created_at', 'posts.updated_at');
 
         // Lọc theo người dùng
         if ($request->has('user_id') && $request->user_id != 'all') {
