@@ -14,8 +14,12 @@ use App\Http\Controllers\Admin\AdminCommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\PostApprovalController;
+<<<<<<< HEAD
 use App\Models\Post;
 use Illuminate\Http\Request;
+=======
+use App\Http\Controllers\Admin\ViewTrackingController;
+>>>>>>> origin/master
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
     Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
     Route::post('/posts/{post}/report', [PostController::class, 'report'])->name('posts.report')->middleware('auth');
+    Route::post('/canhan/schedule-multi', [App\Http\Controllers\Auth\TrangChuController::class, 'scheduleMulti'])->name('canhan.scheduleMulti');
 });
 
 // Route bình luận cho user thường (phải đặt ngoài group admin)
@@ -80,6 +85,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/api/post-history/filter', [PostHistoryController::class, 'filter'])->name('post-history.filter');
 
     // Quản lý bình luận
+<<<<<<< HEAD
     Route::get('/quanlybinhluan', [App\Http\Controllers\Admin\AdminCommentController::class, 'index'])->name('quanlybinhluan');
 
     // Phân tích tương tác
@@ -95,19 +101,43 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     })->name('theodoiluotxem');
 
     // Xuất dữ liệu
+=======
+    Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
+    Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+    Route::put('/comments/{id}', [AdminCommentController::class, 'update'])->name('comments.update');
+
+    // Quản lý tương tác
+    Route::get('/quanlytuongtac', [InteractionController::class, 'index'])->name('quanlytuongtac');
+
+    Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
+
+>>>>>>> origin/master
     Route::get('/xuatdulieu', function() {
         return view('admin.xuatdulieu');
     })->name('xuatdulieu');
 
+<<<<<<< HEAD
     // Báo cáo hiệu suất
+=======
+>>>>>>> origin/master
     Route::get('/baocaohieusuat', function() {
         return view('admin.baocaohieusuat');
     })->name('baocaohieusuat');
 
+<<<<<<< HEAD
     // Gửi thông báo
     Route::get('/guithongbao', function() {
         return view('admin.guithongbao');
     })->name('guithongbao');
+=======
+    Route::get('/guithongbao', function() {
+        return view('admin.guithongbao');
+    })->name('guithongbao');
+
+    Route::post('/lichdangbai/schedule-multi', [App\Http\Controllers\Admin\PostController::class, 'scheduleMulti'])->name('scheduleMulti');
+
+    Route::post('/bulk-schedule', [App\Http\Controllers\Admin\PostController::class, 'bulkSchedule'])->name('bulkSchedule');
+>>>>>>> origin/master
 });
 
 // Redirect root to login

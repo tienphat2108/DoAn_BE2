@@ -60,12 +60,21 @@ class TrangChuController extends Controller
                         ->where('status', 'approved')
                         ->latest()
                         ->get();
+            $scheduledPosts = Post::where('user_id', $user->id)->where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
+            $canceledPosts = Post::where('user_id', $user->id)->where('status', 'canceled')->orderBy('updated_at', 'desc')->get();
+            $pendingPosts = Post::where('user_id', $user->id)->where('status', 'pending')->orderBy('created_at', 'desc')->get();
         } else {
             $posts = collect();
+            $scheduledPosts = collect();
+            $canceledPosts = collect();
+            $pendingPosts = collect();
         }
         return view('crud_trangchu.canhan', [
             'user' => $user,
-            'posts' => $posts
+            'posts' => $posts,
+            'scheduledPosts' => $scheduledPosts,
+            'canceledPosts' => $canceledPosts,
+            'pendingPosts' => $pendingPosts,
         ]);
     }
 
@@ -92,5 +101,23 @@ class TrangChuController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
         return redirect()->route('canhan')->with('success', 'Đổi mật khẩu thành công!');
+    }
+
+    public function scheduleMulti(Request $request)
+    {
+        $user = Auth::user();
+        $postIds = $request->input('post_ids', []);
+        $scheduledAts = $request->input('scheduled_at', []);
+        $count = 0;
+        foreach ($postIds as $postId) {
+            $post = Post::where('id', $postId)->where('user_id', $user->id)->first();
+            if ($post && !empty($scheduledAts[$postId])) {
+                $post->scheduled_at = $scheduledAts[$postId];
+                $post->status = 'scheduled';
+                $post->save();
+                $count++;
+            }
+        }
+        return redirect()->route('canhan')->with('success', 'Đã lên lịch cho ' . $count . ' bài viết!');
     }
 }
