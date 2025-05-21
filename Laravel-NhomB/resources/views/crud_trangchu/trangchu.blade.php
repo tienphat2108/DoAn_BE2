@@ -126,7 +126,7 @@
         </div>
         <div class="navbar-right">
             <a href="/canhan" class="navbar-avatar-link">
-                <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="navbar-avatar">
+                <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="navbar-avatar">
             </a>
             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: inline;">
                 @csrf
@@ -200,7 +200,7 @@
             <input type="hidden" name="status" value="pending">
             <input type="hidden" name="draft_id" id="draft_id" value="{{ session('draft_id') ?? '' }}">
             <div class="create-post-header" style="display:flex;align-items:center;gap:16px;">
-                <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
+                <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
                 <input type="text" name="content" id="post-content" placeholder="Bạn đang nghĩ gì thế?" style="flex:1;padding:14px 18px;border-radius:24px;border:1px solid #e4e6eb;background:#f0f2f5;font-size:16px;">
             </div>
             <div class="create-post-expanded" id="create-post-expanded" style="margin-top:16px;">
@@ -236,7 +236,7 @@
                 @php $userLiked = $post->likes->contains('user_id', Auth::id()); @endphp
                 <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}" style="border:2px solid #dc3545;box-shadow:0 2px 12px rgba(220,53,69,0.08);">
                     <div class="post-header">
-                        <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
+                        <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
                             <h3 style="color:#dc3545;font-weight:bold;">🔥 {{ $post->user->full_name ?? $post->user->username }} <span style="font-size:0.9em;font-weight:400;">(Khẩn cấp)</span></h3>
                             <span>{{ $post->created_at->diffForHumans() }}</span>
@@ -309,7 +309,7 @@
                 @php $userLiked = $post->likes->contains('user_id', Auth::id()); @endphp
                 <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                     <div class="post-header">
-                        <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
+                        <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
                             <h3>{{ $post->user->full_name ?? $post->user->username }}</h3>
                             <span>

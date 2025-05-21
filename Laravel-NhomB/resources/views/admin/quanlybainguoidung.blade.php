@@ -34,20 +34,6 @@
 
             <div class="admin-main">
                 <h2>ADMIN quản lý bài đăng</h2>
-                <!-- Bộ lọc và Tìm kiếm -->
-                <div class="filter-bar" style="display: flex; justify-content: center; align-items: center; gap: 18px; margin-bottom: 24px; flex-wrap: wrap;">
-                    <select class="filter-select">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="pending">Chờ duyệt</option>
-                        <option value="approved">Đã duyệt</option>
-                        <option value="canceled">Đã hủy</option>
-                        <option value="draft">Bản nháp</option>
-                    </select>
-                 
-                    <input type="text" class="filter-search" placeholder="Tìm kiếm...">
-                    <button class="filter-btn">Tìm kiếm</button>
-                </div>
-
                 @if(session('success'))
                     <div class="alert alert-success">
                         {{ session('success') }}
@@ -92,8 +78,10 @@
                                         Yêu cầu duyệt
                                     @elseif($post->status == 'approved')
                                         Đã duyệt
-                                    @else
+                                    @elseif($post->status == 'bản nháp' || $post->status == 'draft')
                                         Bản nháp
+                                    @else
+                                        {{ $post->status }}
                                     @endif
                                 </td>
                                 <td>{{ $post->created_at->format('d/m/Y') }}</td>
@@ -101,7 +89,13 @@
                                     @if($post->status == 'pending')
                                         <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block;">
                                             @csrf
-                                            <button type="submit" class="btn-approve">Gửi</button>
+                                            <button type="submit" class="btn-approve">Duyệt</button>
+                                        </form>
+                                    @elseif($post->status == 'bản nháp' || $post->status == 'draft')
+                                        <form action="{{ route('admin.posts.moveToPending', $post->id) }}" method="POST" style="display: inline-block;">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="btn-approve">Chờ duyệt</button>
                                         </form>
                                     @endif
                                     <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;">

@@ -95,6 +95,8 @@ class PostController extends Controller
             'content' => $request->content,
             'scheduled_at' => $request->scheduled_at,
         ]);
+        // Log trạng thái bài viết sau khi tạo
+        \Illuminate\Support\Facades\Log::info('Post created with status: ' . $post->status . ' for post ID: ' . $post->id);
         // Lưu media nếu có
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {

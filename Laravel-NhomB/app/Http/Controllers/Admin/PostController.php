@@ -19,7 +19,7 @@ class PostController extends Controller
     public function approve($id)
     {
         $post = Post::findOrFail($id);
-        $post->status = 'đã duyệt';
+        $post->status = 'approved';
         $post->save();
         // Ghi lịch sử duyệt bài viết
         \App\Models\PostHistory::create([
@@ -90,13 +90,8 @@ class PostController extends Controller
 
     public function postSchedule()
     {
-<<<<<<< HEAD
-        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
-        $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->paginate(20);
-=======
         $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->with('user')->get();
         $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->paginate(10);
->>>>>>> origin/master
         return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories'));
     }
 
@@ -172,5 +167,25 @@ class PostController extends Controller
             }
         }
         return response()->json(['success' => true, 'count' => $count]);
+    }
+
+    // Chuyển bài viết từ Bản nháp sang Chờ duyệt
+    public function moveToPending($id)
+    {
+        $post = Post::findOrFail($id);
+        if ($post->status === 'bản nháp' || $post->status === 'draft') {
+            $post->status = 'pending';
+            $post->save();
+            // Ghi lịch sử chuyển trạng thái
+            \App\Models\PostHistory::create([
+                'post_id' => $post->id,
+                'user_id' => Auth::id(),
+                'action' => 'move_to_pending',
+                'details' => 'Bài viết được chuyển từ bản nháp sang chờ duyệt bởi admin'
+            ]);
+            return redirect()->back()->with('success', 'Đã chuyển bài viết sang trạng thái chờ duyệt.');
+        } else {
+            return redirect()->back()->with('error', 'Bài viết không ở trạng thái bản nháp.');
+        }
     }
 } 

@@ -147,7 +147,7 @@
     <div class="profile-container">
         <div class="profile-header">
             <div class="profile-avatar-status">
-                <img src="{{ $user->avatar_url ?? asset('images/default-avatar.png') }}" alt="Avatar" class="profile-avatar">
+                <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
                 <span class="profile-status online"></span>
             </div>
             <div class="profile-info">
@@ -168,7 +168,7 @@
                 @forelse($posts as $post)
                     <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                         <div class="post-header">
-                            <img src="{{ $user->avatar_url ?? asset('images/default-avatar.png') }}" alt="Avatar" class="avatar">
+                            <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                             <div class="post-info">
                                 <h3>{{ $user->full_name ?? $user->username }}</h3>
                                 <span>{{ $post->created_at->diffForHumans() }}</span>

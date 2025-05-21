@@ -11,34 +11,29 @@ class InteractionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Post::with(['user', 'likes', 'comments'])
-            ->select('posts.*')
-            ->selectRaw('COUNT(DISTINCT post_likes.id) as likes_count')
-            ->selectRaw('COUNT(DISTINCT comments.id) as comments_count')
-            ->leftJoin('post_likes', 'posts.id', '=', 'post_likes.post_id')
-            ->leftJoin('comments', 'posts.id', '=', 'comments.post_id')
-            ->groupBy('posts.id', 'posts.user_id', 'posts.title', 'posts.content', 'posts.latitude', 'posts.longitude', 'posts.status', 'posts.scheduled_at', 'posts.shares_count', 'posts.created_at', 'posts.updated_at');
+        $query = Post::with(['user'])
+            ->withCount(['likes', 'comments']);
 
         // Lọc theo người dùng
         if ($request->has('user_id') && $request->user_id != 'all') {
-            $query->where('posts.user_id', $request->user_id);
+            $query->where('user_id', $request->user_id);
         }
 
         // Lọc theo khoảng thời gian
         if ($request->has('time_range')) {
             switch ($request->time_range) {
                 case 'today':
-                    $query->whereDate('posts.created_at', today());
+                    $query->whereDate('created_at', today());
                     break;
                 case 'week':
-                    $query->whereBetween('posts.created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
                     break;
                 case 'month':
-                    $query->whereMonth('posts.created_at', now()->month)
-                          ->whereYear('posts.created_at', now()->year);
+                    $query->whereMonth('created_at', now()->month)
+                          ->whereYear('created_at', now()->year);
                     break;
                 case 'year':
-                    $query->whereYear('posts.created_at', now()->year);
+                    $query->whereYear('created_at', now()->year);
                     break;
             }
         }
@@ -49,16 +44,16 @@ class InteractionController extends Controller
         
         switch ($sortBy) {
             case 'likes':
-                $query->orderBy('likes_count', $sortOrder);
+                $query->orderByDesc('likes_count');
                 break;
             case 'comments':
-                $query->orderBy('comments_count', $sortOrder);
+                $query->orderByDesc('comments_count');
                 break;
             case 'shares':
-                $query->orderBy('shares_count', $sortOrder);
+                $query->orderByDesc('shares_count');
                 break;
             default:
-                $query->orderBy('posts.created_at', $sortOrder);
+                $query->orderBy('created_at', $sortOrder);
         }
 
         $posts = $query->paginate(10);
