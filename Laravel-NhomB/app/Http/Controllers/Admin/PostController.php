@@ -90,9 +90,12 @@ class PostController extends Controller
 
     public function postSchedule()
     {
-        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->with('user')->get();
+        // Lấy tất cả bài viết cho tab 'All'
+        $allPosts = Post::orderBy('created_at', 'desc')->with(['user', 'media'])->get();
+        // Lấy bài viết đã lên lịch cho tab 'Lịch trình Đăng Bài'
+        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->with(['user', 'media'])->get();
         $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories'));
+        return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories', 'allPosts'));
     }
 
     public function store(Request $request)

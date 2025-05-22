@@ -199,6 +199,7 @@
             @csrf
             <input type="hidden" name="status" value="pending">
             <input type="hidden" name="draft_id" id="draft_id" value="{{ session('draft_id') ?? '' }}">
+            <input type="hidden" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}">
             <div class="create-post-header" style="display:flex;align-items:center;gap:16px;">
                 <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
                 <input type="text" name="content" id="post-content" placeholder="Bạn đang nghĩ gì thế?" style="flex:1;padding:14px 18px;border-radius:24px;border:1px solid #e4e6eb;background:#f0f2f5;font-size:16px;">
@@ -210,6 +211,7 @@
                     <label><input type="radio" name="post_type" value="scheduled" onchange="handlePostTypeChange(this.value)"> Đặt lịch</label>
                     <label><input type="radio" name="post_type" value="urgent" onchange="handlePostTypeChange(this.value)"> Đăng khẩn cấp</label>
                 </div>
+                <div id="scheduled-time-display" style="display:none; margin-bottom: 12px; font-weight: 500; color: #007bff;"></div>
                 <div class="create-post-actions" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                     <div class="action-options" style="display:flex;gap:18px;align-items:center;">
                         <label for="post-media" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:500;color:#1877f2;"><i class="fas fa-photo-video photo-video"></i> Ảnh/Video</label>
@@ -430,7 +432,7 @@
     <div id="scheduleModal" class="modal" style="display:none;z-index:99999;">
         <div class="modal-content" style="width:400px;max-width:90vw;">
             <h2>Đặt lịch đăng bài</h2>
-            <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="form-control" style="margin:10px 0;">
+            <input type="datetime-local" id="scheduled_at_modal" class="form-control" style="margin:10px 0;">
             <div class="modal-buttons">
                 <button type="button" class="modal-button confirm-button" onclick="confirmSchedule()">Xác nhận</button>
                 <button type="button" class="modal-button cancel-button" onclick="hideScheduleModal()">Hủy</button>
@@ -693,22 +695,28 @@
         document.getElementById('scheduleModal').style.display = 'none';
     }
     function confirmSchedule() {
-        const scheduledAt = document.getElementById('scheduled_at').value;
+        const scheduledAt = document.getElementById('scheduled_at_modal').value;
         if (scheduledAt) {
             document.querySelector('input[name="scheduled_at"]').value = scheduledAt;
             hideScheduleModal();
+            const displayDiv = document.getElementById('scheduled-time-display');
+            if (displayDiv) {
+                const dateObj = new Date(scheduledAt);
+                const formattedDate = dateObj.toLocaleDateString('vi-VN') + ' ' + dateObj.toLocaleTimeString('vi-VN');
+                displayDiv.textContent = 'Thời gian đặt lịch: ' + formattedDate;
+                displayDiv.style.display = 'block';
+            }
         } else {
             alert('Vui lòng chọn thời gian đăng bài!');
         }
     }
 
     function handlePostTypeChange(type) {
-        if (type === 'scheduled') {
-            document.getElementById('scheduleBtn').style.display = 'inline-flex';
+        const scheduleDiv = document.getElementById('scheduled-time-display');
+        if (type === 'scheduled' && scheduleDiv.textContent !== '') {
+            scheduleDiv.style.display = 'block';
         } else {
-            document.getElementById('scheduleBtn').style.display = 'none';
-            document.getElementById('scheduled_at').value = '';
-            document.querySelector('input[name="scheduled_at"]').value = '';
+            scheduleDiv.style.display = 'none';
         }
     }
 

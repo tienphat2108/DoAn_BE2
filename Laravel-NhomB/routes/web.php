@@ -80,7 +80,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
     
     // Xuất dữ liệu
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
+    Route::get('/tracking', [AnalyticsController::class, 'viewTracking'])->name('tracking');
+    Route::get('/performance-report', [AnalyticsController::class, 'performanceReport'])->name('performance-report');
+    Route::get('/send-notification', [AnalyticsController::class, 'sendNotification'])->name('send-notification');
     Route::get('/xuatdulieu', [AnalyticsController::class, 'exportData'])->name('xuatdulieu');
+    Route::get('/xuatdulieu/export', [AnalyticsController::class, 'export'])->name('xuatdulieu.export');
     
     // Báo cáo hiệu suất
     Route::get('/baocaohieusuat', [AnalyticsController::class, 'performanceReport'])->name('baocaohieusuat');
@@ -107,14 +112,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/quanlytuongtac', [InteractionController::class, 'index'])->name('quanlytuongtac');
 
     Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
-
-    Route::get('/xuatdulieu', function() {
-        return view('admin.xuatdulieu');
-    })->name('xuatdulieu');
-
-    Route::get('/baocaohieusuat', function() {
-        return view('admin.baocaohieusuat');
-    })->name('baocaohieusuat');
 
     Route::get('/guithongbao', function() {
         return view('admin.guithongbao');

@@ -124,6 +124,10 @@
     </style>
 </head>
 <body>
+    <script>
+        console.log('Scheduled Posts Data:', @json($scheduledPosts));
+    </script>
+
     <div class="admin-container">
         <div class="admin-header">
             <div class="logo">
@@ -207,13 +211,31 @@
                                 <tr>
                                     <th>Hình ảnh</th>
                                     <th>Tiêu đề</th>
+                                    <th>Người đăng</th>
                                     <th>Trạng thái</th>
-                                    <th>Ngày đăng</th>
-                                    <th>Ngày tạo</th>
+                                    <th>Thời gian tạo</th>
+                                    <th>Thời gian đăng lịch</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>
+                                @forelse($allPosts as $post)
+                                    <tr>
+                                        <td>
+                                            @if($post->media->isNotEmpty() && str_contains($post->media->first()->file_type, 'image'))
+                                                <img src="{{ asset('storage/' . $post->media->first()->file_url) }}" alt="Hình ảnh" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
+                                            @else
+                                                <span>Không có</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ Str::limit($post->title, 50) }}</td>
+                                        <td>{{ $post->user->name ?? 'N/A' }}</td>
+                                        <td>{{ $post->status }}</td>
+                                        <td>{{ $post->created_at->format('H:i:s d/m/Y') }}</td>
+                                        <td>{{ $post->scheduled_at ? \Carbon\Carbon::parse($post->scheduled_at)->format('H:i:s d/m/Y') : '' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="6" class="text-center">Không có dữ liệu bài viết nào.</td></tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
