@@ -143,7 +143,7 @@
                     <li><a href="{{ route('admin.baichoduyet') }}">BÀI CHỜ DUYỆT</a></li>
                     <li><a href="{{ route('admin.baidaduyet') }}">BÀI ĐÃ DUYỆT</a></li>
                     <li><a href="{{ route('admin.lichdangbai') }}">LỊCH ĐĂNG BÀI</a></li>
-                    <li><a href="{{ route('admin.phantichtruycap') }}">PHÂN TÍCH TRUY CẬP</a></li>
+                    <li><a href="{{ route('admin.quanlybinhluan') }}">PHÂN TÍCH TRUY CẬP</a></li>
                     <li><a href="#" onclick="showLogoutModal()">ĐĂNG XUẤT</a></li>
                 </ul>
             </div>
@@ -272,7 +272,7 @@
                                         <td>{{ Str::limit($post->title, 50) }}</td>
                                         <td>{{ $post->user->name ?? 'N/A' }}</td>
                                         <td>{{ $post->status }}</td>
-                                        <td>{{ $post->scheduled_at ? $post->scheduled_at->format('H:i:s d/m/Y') : '' }}</td>
+                                        <td>{{ $post->scheduled_at ? \Carbon\Carbon::parse($post->scheduled_at)->format('H:i:s d/m/Y') : '' }}</td>
                                         <td>
                                             <button class="action-btn view-btn" onclick="viewPost({{ $post->id }})">Xem chi tiết</button>
                                             <button class="action-btn cancel-btn" onclick="cancelSchedule({{ $post->id }})">Hủy lịch</button>
@@ -288,58 +288,47 @@
                 </div>
                 <!-- Tab Đăng Bài Hàng Loạt -->
                 <div class="tab-content" id="tab-bulk" style="display:none;">
-                    <div class="bulk-upload-container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
-                        <!-- Thông tin cột bắt buộc -->
-                        <div class="required-fields" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
-                            <h3 style="margin-bottom: 16px;">Thông tin cột bắt buộc</h3>
-                            <ul style="list-style: none; padding: 0;">
-                                <li style="margin-bottom: 8px;">• Tiêu đề</li>
-                                <li style="margin-bottom: 8px;">• Nội dung</li>
-                                <li style="margin-bottom: 8px;">• Thời gian đăng</li>
-                            </ul>
-                            <a href="#" class="filter-btn" style="display: inline-block; margin-top: 12px;">Tải tệp mẫu</a>
-                        </div>
-
-                        <!-- Form tải lên tệp -->
-                        <div class="upload-section" style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #dee2e6;">
-                            <h3 style="margin-bottom: 16px;">Tải lên tệp</h3>
-                            <form id="bulkUploadForm" enctype="multipart/form-data">
-                                <div style="display: flex; align-items: center; gap: 16px;">
-                                    <input type="file" id="bulkFile" accept=".xlsx,.xls,.csv" style="display: none;">
-                                    <button type="button" class="filter-btn" onclick="document.getElementById('bulkFile').click()">Chọn tệp</button>
-                                    <span id="selectedFileName" style="color: #666;">Chưa chọn tệp nào</span>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Xem trước dữ liệu -->
-                        <div class="preview-section" style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 1px solid #dee2e6;">
-                            <h3 style="margin-bottom: 16px;">Xem trước dữ liệu</h3>
-                            <div id="previewTable" style="overflow-x: auto;">
-                                <table class="table-users" style="width: 100%;">
-                                    <thead>
-                                        <tr>
-                                            <th>Tiêu đề</th>
-                                            <th>Nội dung</th>
-                                            <th>Thời gian đăng</th>
-                                            <th>Trạng thái</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="4" class="text-center">Chưa có dữ liệu</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    <button class="btn btn-danger" style="margin-bottom:16px;" onclick="showBulkScheduleModalAdmin()">Đặt lịch hàng loạt</button>
+                </div>
+                <!-- Modal đặt lịch hàng loạt cho admin -->
+                <div id="bulkScheduleModalAdmin" class="modal" style="display:none;z-index:99999;">
+                    <div class="modal-content" style="width:600px;max-width:98vw;">
+                        <h2>Đặt lịch đăng bài hàng loạt (Admin)</h2>
+                        <form id="bulk-schedule-form-admin" method="POST" action="{{ route('admin.scheduleMulti') }}">
+                            @csrf
+                            <table style="width:100%;margin-bottom:12px;">
+                                <thead><tr><th></th><th>Tiêu đề</th><th>Người đăng</th><th>Thời gian đăng</th></tr></thead>
+                                <tbody>
+                                    @foreach($scheduledPosts->merge($histories->pluck('post')->whereIn('status', ['bản nháp','pending']))->unique('id') as $post)
+                                    @if($post && in_array($post->status, ['bản nháp','pending']))
+                                    <tr>
+                                        <td><input type="checkbox" name="post_ids[]" value="{{ $post->id }}"></td>
+                                        <td>{{ $post->title }}</td>
+                                        <td>{{ $post->user->name ?? $post->user->username ?? 'N/A' }}</td>
+                                        <td><input type="datetime-local" name="scheduled_at[{{ $post->id }}]"></td>
+                                    </tr>
+                                    @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <div style="margin: 16px 0; border-top: 1px solid #eee; padding-top: 12px;">
+                                <label style="font-weight:500;">Hoặc tải lên file Excel/CSV:</label>
+                                <input type="file" id="bulkFile" accept=".xlsx,.xls,.csv" style="margin-left:12px;">
+                                <button type="button" class="modal-button confirm-button" onclick="handleBulkFileUpload()">Xem trước</button>
                             </div>
-                            <div id="errorMessages" style="margin-top: 16px; color: #dc3545; display: none;"></div>
-                        </div>
-
-                        <!-- Nút thao tác -->
-                        <div class="action-buttons" style="display: flex; gap: 16px; justify-content: center;">
-                            <button class="filter-btn" onclick="scheduleBulkPosts()">Lên lịch hàng loạt</button>
-                            <button class="filter-btn" style="background: #dc3545;" onclick="cancelBulkUpload()">Hủy</button>
-                        </div>
+                            <div id="previewTableContainer" style="display:none;margin-bottom:12px;max-height:200px;overflow:auto;background:#f8f9fa;border-radius:6px;padding:8px;">
+                                <h4 style="margin-bottom:8px;">Xem trước dữ liệu</h4>
+                                <table id="previewTable" style="width:100%;">
+                                    <thead><tr><th>Tiêu đề</th><th>Nội dung</th><th>Thời gian đăng</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                                <button type="button" class="modal-button confirm-button" onclick="importBulkSchedule()">Lên lịch từ file</button>
+                            </div>
+                            <div class="modal-buttons">
+                                <button type="submit" class="modal-button confirm-button">Lên lịch</button>
+                                <button type="button" class="modal-button cancel-button" onclick="hideBulkScheduleModalAdmin()">Hủy</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 <!-- Tab Lịch sử Đăng Bài -->
@@ -402,7 +391,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        {{ $histories->links() }}
                     </div>
                 </div>
                 <!-- Tab Cài đặt -->
@@ -658,172 +646,63 @@
             showTab('all', {target: document.querySelector('.tab-btn.active')});
         });
 
-        // Bulk Upload Functions
-        let bulkFileData = null;
-
-        // Xử lý khi chọn file
-        document.getElementById('bulkFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            // Hiển thị tên file
-            document.getElementById('selectedFileName').textContent = file.name;
-
-            // Kiểm tra định dạng file
-            const validTypes = ['.xlsx', '.xls', '.csv'];
-            const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-            if (!validTypes.includes(fileExt)) {
-                showError('Định dạng file không hợp lệ. Vui lòng chọn file Excel hoặc CSV.');
-                return;
-            }
-
-            // Đọc file
+        // Modal bulk schedule admin
+        function showBulkScheduleModalAdmin() {
+            document.getElementById('bulkScheduleModalAdmin').style.display = 'flex';
+        }
+        function hideBulkScheduleModalAdmin() {
+            document.getElementById('bulkScheduleModalAdmin').style.display = 'none';
+        }
+        // Xử lý file Excel/CSV
+        function handleBulkFileUpload() {
+            const fileInput = document.getElementById('bulkFile');
+            const file = fileInput.files[0];
+            if (!file) { alert('Vui lòng chọn file!'); return; }
             const reader = new FileReader();
             reader.onload = function(e) {
-                try {
-                    if (fileExt === '.csv') {
-                        parseCSV(e.target.result);
-                    } else {
-                        parseExcel(e.target.result);
+                let data = [];
+                if (file.name.endsWith('.csv')) {
+                    const text = e.target.result;
+                    const lines = text.split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        const values = lines[i].split(',').map(v => v.trim());
+                        data.push({
+                            title: values[headers.indexOf('Tiêu đề')],
+                            content: values[headers.indexOf('Nội dung')],
+                            scheduled_at: values[headers.indexOf('Thời gian đăng')]
+                        });
                     }
-                } catch (error) {
-                    showError('Lỗi khi đọc file: ' + error.message);
+                } else {
+                    const workbook = XLSX.read(e.target.result, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet);
+                    data = rows.map(row => ({
+                        title: row['Tiêu đề'],
+                        content: row['Nội dung'],
+                        scheduled_at: row['Thời gian đăng']
+                    }));
                 }
+                bulkFileData = data;
+                showPreviewTable(data);
             };
-            reader.readAsArrayBuffer(file);
-        });
-
-        // Parse CSV file
-        function parseCSV(content) {
-            const lines = content.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
-            
-            // Kiểm tra headers bắt buộc
-            const requiredHeaders = ['Tiêu đề', 'Nội dung', 'Thời gian đăng'];
-            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-            
-            if (missingHeaders.length > 0) {
-                showError('Thiếu các cột bắt buộc: ' + missingHeaders.join(', '));
-                return;
-            }
-
-            // Parse dữ liệu
-            const data = [];
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                
-                const values = lines[i].split(',').map(v => v.trim());
-                const row = {
-                    title: values[headers.indexOf('Tiêu đề')],
-                    content: values[headers.indexOf('Nội dung')],
-                    scheduled_at: values[headers.indexOf('Thời gian đăng')],
-                    status: 'Chờ duyệt'
-                };
-                data.push(row);
-            }
-
-            bulkFileData = data;
-            updatePreviewTable(data);
+            if (file.name.endsWith('.csv')) reader.readAsText(file);
+            else reader.readAsArrayBuffer(file);
         }
-
-        // Parse Excel file
-        function parseExcel(content) {
-            // Sử dụng SheetJS để đọc file Excel
-            const workbook = XLSX.read(content, { type: 'array' });
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const data = XLSX.utils.sheet_to_json(firstSheet);
-
-            // Kiểm tra headers bắt buộc
-            const requiredHeaders = ['Tiêu đề', 'Nội dung', 'Thời gian đăng'];
-            const headers = Object.keys(data[0]);
-            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-            
-            if (missingHeaders.length > 0) {
-                showError('Thiếu các cột bắt buộc: ' + missingHeaders.join(', '));
-                return;
-            }
-
-            // Format dữ liệu
-            const formattedData = data.map(row => ({
-                title: row['Tiêu đề'],
-                content: row['Nội dung'],
-                scheduled_at: row['Thời gian đăng'],
-                status: 'Chờ duyệt'
-            }));
-
-            bulkFileData = formattedData;
-            updatePreviewTable(formattedData);
-        }
-
-        // Cập nhật bảng preview
-        function updatePreviewTable(data) {
+        function showPreviewTable(data) {
+            const container = document.getElementById('previewTableContainer');
             const tbody = document.querySelector('#previewTable tbody');
             tbody.innerHTML = '';
-
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center">Chưa có dữ liệu</td></tr>';
-                return;
-            }
-
-            data.forEach((row, index) => {
+            data.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.title || ''}</td>
-                    <td>${row.content ? row.content.substring(0, 100) + (row.content.length > 100 ? '...' : '') : ''}</td>
-                    <td>${row.scheduled_at || ''}</td>
-                    <td>
-                        <span class="status-badge ${row.status.toLowerCase()}">${row.status}</span>
-                    </td>
-                `;
+                tr.innerHTML = `<td>${row.title||''}</td><td>${row.content||''}</td><td>${row.scheduled_at||''}</td>`;
                 tbody.appendChild(tr);
             });
-
-            // Thêm style cho status badge
-            const style = document.createElement('style');
-            style.textContent = `
-                .status-badge {
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 0.9rem;
-                }
-                .status-badge.chờ duyệt {
-                    background: #ffc107;
-                    color: #000;
-                }
-                .status-badge.đã duyệt {
-                    background: #28a745;
-                    color: #fff;
-                }
-                .status-badge.đã hủy {
-                    background: #dc3545;
-                    color: #fff;
-                }
-            `;
-            document.head.appendChild(style);
+            container.style.display = 'block';
         }
-
-        // Hiển thị lỗi
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessages');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-        }
-
-        // Xóa lỗi
-        function clearError() {
-            const errorDiv = document.getElementById('errorMessages');
-            errorDiv.textContent = '';
-            errorDiv.style.display = 'none';
-        }
-
-        // Lên lịch hàng loạt
-        function scheduleBulkPosts() {
-            if (!bulkFileData || bulkFileData.length === 0) {
-                showError('Vui lòng chọn file và kiểm tra dữ liệu trước khi lên lịch.');
-                return;
-            }
-
-            // Gửi request lên server
+        function importBulkSchedule() {
+            if (!bulkFileData || bulkFileData.length === 0) { alert('Không có dữ liệu!'); return; }
             fetch('/admin/bulk-schedule', {
                 method: 'POST',
                 headers: {
@@ -832,184 +711,63 @@
                 },
                 body: JSON.stringify({ posts: bulkFileData })
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     alert('Đã lên lịch thành công ' + data.count + ' bài viết!');
-                    cancelBulkUpload();
+                    hideBulkScheduleModalAdmin();
+                    location.reload();
                 } else {
-                    showError(data.message || 'Có lỗi xảy ra khi lên lịch bài viết.');
+                    alert(data.message || 'Có lỗi xảy ra khi lên lịch bài viết.');
                 }
             })
-            .catch(error => {
-                showError('Lỗi kết nối: ' + error.message);
-            });
+            .catch(err => alert('Lỗi kết nối: ' + err.message));
         }
-
-        // Hủy tải lên
-        function cancelBulkUpload() {
-            document.getElementById('bulkFile').value = '';
-            document.getElementById('selectedFileName').textContent = 'Chưa chọn tệp nào';
-            document.querySelector('#previewTable tbody').innerHTML = '<tr><td colspan="4" class="text-center">Chưa có dữ liệu</td></tr>';
-            clearError();
-            bulkFileData = null;
+        // Thêm các hàm thao tác bài viết cho tab Lịch trình Đăng Bài
+        function viewPost(id) {
+            // Có thể mở modal chi tiết hoặc chuyển trang, ví dụ:
+            window.location.href = '/admin/post/' + id;
         }
-
-        // Thêm các hàm xử lý cho bảng bài viết cần duyệt
-        function filterPosts(searchText) {
-            const rows = document.querySelectorAll('.post-row');
-            searchText = searchText.toLowerCase();
-            
-            rows.forEach(row => {
-                const title = row.querySelector('td:first-child').textContent.toLowerCase();
-                const content = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                const author = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                
-                if (title.includes(searchText) || content.includes(searchText) || author.includes(searchText)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        function filterByStatus(status) {
-            const rows = document.querySelectorAll('.post-row');
-            
-            rows.forEach(row => {
-                if (!status || row.dataset.status === status) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        function approvePost(postId) {
-            if (confirm('Bạn có chắc chắn muốn duyệt bài viết này?')) {
-                fetch(`/admin/quanlybainguoidung/${postId}/approve`, {
+        function cancelSchedule(id) {
+            if(confirm('Bạn có chắc chắn muốn hủy lịch bài viết này?')) {
+                fetch('/admin/cancel-schedule/' + id, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
-                        alert('Đã duyệt bài viết thành công!');
+                    if(data.success) {
+                        alert('Đã hủy lịch thành công!');
                         location.reload();
                     } else {
-                        alert('Có lỗi xảy ra: ' + data.message);
+                        alert(data.message || 'Có lỗi xảy ra khi hủy lịch.');
                     }
                 })
-                .catch(error => {
-                    alert('Lỗi kết nối: ' + error.message);
-                });
+                .catch(err => alert('Lỗi kết nối: ' + err.message));
             }
         }
-
-        function rejectPost(postId) {
-            if (confirm('Bạn có chắc chắn muốn từ chối bài viết này?')) {
-                fetch(`/admin/quanlybainguoidung/${postId}/reject`, {
+        function approvePost(id) {
+            if(confirm('Bạn có chắc chắn muốn cho phép đăng bài này?')) {
+                fetch('/admin/approve-post/' + id, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
-                        alert('Đã từ chối bài viết!');
+                    if(data.success) {
+                        alert('Đã cho phép đăng bài!');
                         location.reload();
                     } else {
-                        alert('Có lỗi xảy ra: ' + data.message);
+                        alert(data.message || 'Có lỗi xảy ra khi duyệt bài.');
                     }
                 })
-                .catch(error => {
-                    alert('Lỗi kết nối: ' + error.message);
-                });
-            }
-        }
-
-        // Hàm lọc lịch sử
-        function applyHistoryFilters() {
-            const action = document.getElementById('history-action-filter').value;
-            const date = document.getElementById('history-date-filter').value;
-            const search = document.getElementById('history-search').value;
-
-            fetch('/admin/api/post-history/filter', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    action: action,
-                    date: date,
-                    search: search
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                updateHistoryTable(data);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
-
-        // Hàm cập nhật bảng lịch sử
-        function updateHistoryTable(histories) {
-            const tbody = document.querySelector('#tab-history tbody');
-            tbody.innerHTML = '';
-
-            if (histories.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không có lịch sử</td></tr>';
-                return;
-            }
-
-            histories.forEach(history => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${history.post ? history.post.title : 'Bài viết đã bị xóa'}</td>
-                    <td>${new Date(history.created_at).toLocaleString('vi-VN')}</td>
-                    <td>${history.user.name}</td>
-                    <td>
-                        <span class="badge bg-${getActionColor(history.action)}">${getActionText(history.action)}</span>
-                    </td>
-                    <td>${history.details}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Hàm lấy màu cho badge dựa vào hành động
-        function getActionColor(action) {
-            switch(action) {
-                case 'create': return 'primary';
-                case 'edit': return 'info';
-                case 'schedule': return 'warning';
-                case 'publish': return 'success';
-                case 'cancel': return 'danger';
-                default: return 'secondary';
-            }
-        }
-
-        // Hàm lấy text hiển thị cho hành động
-        function getActionText(action) {
-            switch(action) {
-                case 'create': return 'Tạo bài viết';
-                case 'edit': return 'Sửa bài viết';
-                case 'schedule': return 'Lên lịch';
-                case 'publish': return 'Đăng bài';
-                case 'cancel': return 'Hủy bài';
-                default: return action;
+                .catch(err => alert('Lỗi kết nối: ' + err.message));
             }
         }
     </script>
-    <!-- Thêm thư viện SheetJS để đọc file Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>

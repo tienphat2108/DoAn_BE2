@@ -9,23 +9,23 @@ class PostComment extends Model
 {
     use HasFactory;
 
-    protected $table = 'post_comments'; // Đặt tên bảng nếu cần, hoặc sửa lại cho đúng
+    protected $table = 'post_comments';
+    protected $primaryKey = 'comment_id';
+    public $incrementing = true;
 
     protected $fillable = [
         'post_id',
         'user_id',
-        'content',
+        'content'
     ];
 
-    // Quan hệ với Post
     public function post()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(Post::class, 'post_id');
     }
 
-    // Quan hệ với User
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 } 

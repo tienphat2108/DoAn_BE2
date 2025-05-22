@@ -123,7 +123,7 @@
                     <li><a href="{{ route('admin.baichoduyet') }}">BÀI CHỜ DUYỆT</a></li>
                     <li><a href="{{ route('admin.baidaduyet') }}">BÀI ĐÃ DUYỆT</a></li>
                     <li><a href="{{ route('admin.lichdangbai') }}">LỊCH ĐĂNG BÀI</a></li>
-                    <li><a href="{{ route('admin.phantichtruycap') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
+                    <li><a href="{{ route('admin.quanlybinhluan') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
                     <li><a href="#" onclick="showLogoutModal()">ĐĂNG XUẤT</a></li>
                 </ul>
             </div>
@@ -131,7 +131,7 @@
             <div class="admin-main">
                 <div class="interaction-actions" style="margin-bottom: 24px;">
                     <a href="{{ route('admin.quanlybinhluan') }}"><button class="interaction-btn">QUẢN LÝ BÌNH LUẬN</button></a>
-                    <a href="{{ route('admin.tuongtac') }}"><button class="interaction-btn selected">QUẢN LÝ TƯƠNG TÁC</button></a>
+                    <a href="{{ route('admin.quanlytuongtac') }}"><button class="interaction-btn selected">QUẢN LÝ TƯƠNG TÁC</button></a>
                     <a href="{{ route('admin.theodoiluotxem') }}"><button class="interaction-btn">THEO DÕI LƯỢT XEM</button></a>
                     <a href="{{ route('admin.xuatdulieu') }}"><button class="interaction-btn">XUẤT DỮ LIỆU</button></a>
                     <a href="{{ route('admin.baocaohieusuat') }}"><button class="interaction-btn">BÁO CÁO</button></a>
@@ -234,7 +234,7 @@
             params.append('sort_by', sortBy);
             params.append('sort_order', sortOrder);
 
-            window.location.href = `{{ route('admin.tuongtac') }}?${params.toString()}`;
+            window.location.href = `{{ route('admin.quanlytuongtac') }}?${params.toString()}`;
         }
 
         // Hiển thị modal đăng xuất

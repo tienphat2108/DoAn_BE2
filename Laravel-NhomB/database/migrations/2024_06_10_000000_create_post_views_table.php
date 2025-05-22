@@ -10,9 +10,13 @@ return new class extends Migration
     {
         Schema::create('post_views', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('post_id')->constrained('posts')->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('post_id');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('ip_address')->nullable();
             $table->timestamps();
+
+            $table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

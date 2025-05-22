@@ -41,17 +41,62 @@ class PostController extends Controller
             'content' => 'nullable|string',
             'media' => 'nullable|array',
             'media.*' => 'file|mimes:jpeg,png,jpg,gif,mp4|max:10240',
+            'scheduled_at' => 'nullable|date',
         ]);
         $user = Auth::user();
+        $errors = [];
+        // Kiểm tra thiếu media
         if (!$request->hasFile('media')) {
-            return back()->withErrors(['media' => 'Bài viết phải có ít nhất một hình ảnh!'])->withInput();
+            $errors[] = 'Bài viết phải có ít nhất một hình ảnh hoặc video!';
+        }
+        // Kiểm tra trùng giờ đăng nếu có scheduled_at
+        if ($request->filled('scheduled_at')) {
+            $exists = Post::where('scheduled_at', $request->scheduled_at)
+                ->where('status', '!=', 'canceled')
+                ->exists();
+            if ($exists) {
+                $errors[] = 'Đã có bài viết khác được lên lịch vào thời gian này. Vui lòng chọn thời gian khác!';
+            }
+        }
+        // Kiểm tra nội dung cấm/từ khóa sai
+        $forbidden = ['cấm', 'vi phạm', 'bậy', 'xxx']; // Tùy chỉnh danh sách từ khóa cấm
+        $content = strtolower($request->title . ' ' . $request->content);
+        $violation = null;
+        foreach ($forbidden as $word) {
+            if (strpos($content, $word) !== false) {
+                $violation = $word;
+                break;
+            }
+        }
+        if ($violation) {
+            $post = Post::create([
+                'title' => $request->title,
+                'user_id' => $user->id,
+                'status' => 'canceled',
+                'content' => $request->content,
+                'admin_note' => 'Bài viết bị hủy do chứa từ cấm: ' . $violation,
+                'scheduled_at' => $request->scheduled_at,
+            ]);
+            \App\Models\PostHistory::create([
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+                'action' => 'cancel',
+                'details' => 'Bài viết bị hủy do chứa từ cấm: ' . $violation
+            ]);
+            return redirect()->route('canhan')->with('error', 'Bài viết bị hủy do vi phạm: chứa từ cấm "' . $violation . '"');
+        }
+        if (!empty($errors)) {
+            return back()->withErrors($errors)->withInput();
         }
         $post = Post::create([
             'title' => $request->title,
             'user_id' => $user->id,
             'status' => 'pending',
             'content' => $request->content,
+            'scheduled_at' => $request->scheduled_at,
         ]);
+        // Log trạng thái bài viết sau khi tạo
+        \Illuminate\Support\Facades\Log::info('Post created with status: ' . $post->status . ' for post ID: ' . $post->id);
         // Lưu media nếu có
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
@@ -64,7 +109,21 @@ class PostController extends Controller
                 ]);
             }
         }
-        // Redirect
+        // Ghi lịch sử đăng bài
+        \App\Models\PostHistory::create([
+            'post_id' => $post->id,
+            'user_id' => $user->id,
+            'action' => 'create',
+            'details' => 'Bài viết mới được tạo'
+        ]);
+        // Sau khi tạo bài viết lên lịch
+        if ($post->status === 'scheduled') {
+            return redirect()->route('trangchu')->with('success', 'Bài viết đã được lên lịch thành công!');
+        }
+        // Sau khi hủy bài viết
+        if ($post->status === 'canceled') {
+            return redirect()->route('trangchu')->with('success', 'Bài viết đã được hủy lịch thành công!');
+        }
         return redirect()->route('trangchu')->with('success', 'Đăng bài thành công!');
     }
 
@@ -86,6 +145,13 @@ class PostController extends Controller
             $post->content = $request->input('content');
         }
         $post->save();
+        // Ghi lịch sử cập nhật bài viết
+        \App\Models\PostHistory::create([
+            'post_id' => $post->id,
+            'user_id' => Auth::id(),
+            'action' => 'edit',
+            'details' => 'Bài viết đã được cập nhật'
+        ]);
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json(['success' => true, 'title' => $post->title]);
         }
@@ -98,9 +164,14 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         // Nếu muốn kiểm tra quyền xóa, thêm ở đây (ví dụ: chỉ cho xóa bài của mình)
         // if (auth()->id() !== $post->user_id) abort(403);
-
+        // Ghi lịch sử xóa bài viết
+        \App\Models\PostHistory::create([
+            'post_id' => $post->id,
+            'user_id' => Auth::id(),
+            'action' => 'delete',
+            'details' => 'Bài viết đã bị xóa'
+        ]);
         $post->delete();
-
         if (request()->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'Xóa bài viết thành công!']);
         }
@@ -194,5 +265,46 @@ class PostController extends Controller
             'user_id' => $user->id,
         ]);
         return response()->json(['success' => true, 'message' => 'Đã báo cáo bài viết!']);
+    }
+
+    // API autosave draft
+    public function autosaveDraft(Request $request)
+    {
+        $user = Auth::user();
+        $draftId = $request->input('draft_id');
+        $title = $request->input('title');
+        $content = $request->input('content');
+        $post = null;
+        if ($draftId) {
+            $post = Post::where('id', $draftId)->where('user_id', $user->id)->where('status', 'bản nháp')->first();
+            if ($post) {
+                $post->title = $title;
+                $post->content = $content;
+                $post->save();
+                // Ghi lịch sử cập nhật bản nháp
+                \App\Models\PostHistory::create([
+                    'post_id' => $post->id,
+                    'user_id' => $user->id,
+                    'action' => 'edit',
+                    'details' => 'Bản nháp đã được cập nhật'
+                ]);
+            }
+        }
+        if (!$post) {
+            $post = Post::create([
+                'title' => $title,
+                'content' => $content,
+                'user_id' => $user->id,
+                'status' => 'bản nháp',
+            ]);
+            // Ghi lịch sử tạo bản nháp
+            \App\Models\PostHistory::create([
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+                'action' => 'create',
+                'details' => 'Bản nháp mới được tạo'
+            ]);
+        }
+        return response()->json(['success' => true, 'draft_id' => $post->id]);
     }
 }

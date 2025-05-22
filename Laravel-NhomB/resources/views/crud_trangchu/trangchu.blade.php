@@ -126,7 +126,7 @@
         </div>
         <div class="navbar-right">
             <a href="/canhan" class="navbar-avatar-link">
-                <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="navbar-avatar">
+                <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="navbar-avatar">
             </a>
             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: inline;">
                 @csrf
@@ -163,10 +163,30 @@
         </div>
     </div>
 
+    <!-- Bell notification -->
+    <div id="bell-notification" style="position:fixed;top:70px;right:24px;z-index:10000;">
+        <div style="position:relative;">
+            <i class="fas fa-bell" id="bell-icon" style="font-size:2rem;color:#1877f2;cursor:pointer;"></i>
+            <span id="bell-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#dc3545;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.9em;font-weight:bold;">1</span>
+        </div>
+        <div id="bell-dropdown" style="display:none;position:absolute;right:0;top:36px;background:#fff;min-width:260px;box-shadow:0 2px 12px rgba(0,0,0,0.12);border-radius:8px;overflow:hidden;">
+            <div id="bell-list"></div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Phần thêm bài viết mới -->
         @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div id="toast-success" style="position:fixed;top:24px;right:24px;z-index:9999;background:#28a745;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
+                {{ session('success') }}
+            </div>
+            <script>setTimeout(()=>{var t=document.getElementById('toast-success');if(t)t.style.display='none';},3000);</script>
+        @endif
+        @if(session('error'))
+            <div id="toast-error" style="position:fixed;top:24px;right:24px;z-index:9999;background:#dc3545;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
+                {{ session('error') }}
+            </div>
+            <script>setTimeout(()=>{var t=document.getElementById('toast-error');if(t)t.style.display='none';},3000);</script>
         @endif
         @if($errors->any())
             <div class="alert alert-danger">
@@ -178,16 +198,23 @@
         <form class="create-post" method="POST" action="{{ route('posts.store') }}" enctype="multipart/form-data" style="box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:16px;padding:24px 24px 16px 24px;background:#fff;">
             @csrf
             <input type="hidden" name="status" value="pending">
+            <input type="hidden" name="draft_id" id="draft_id" value="{{ session('draft_id') ?? '' }}">
             <div class="create-post-header" style="display:flex;align-items:center;gap:16px;">
-                <img src="{{ Auth::user()->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
+                <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
                 <input type="text" name="content" id="post-content" placeholder="Bạn đang nghĩ gì thế?" style="flex:1;padding:14px 18px;border-radius:24px;border:1px solid #e4e6eb;background:#f0f2f5;font-size:16px;">
             </div>
             <div class="create-post-expanded" id="create-post-expanded" style="margin-top:16px;">
                 <input type="text" name="title" id="post-title" placeholder="Tiêu đề bài viết..." required style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #e4e6eb;margin-bottom:12px;font-size:15px;">
+                <div class="post-type-options" style="margin-bottom: 12px; display: flex; gap: 18px; align-items: center;">
+                    <label><input type="radio" name="post_type" value="now" checked onchange="handlePostTypeChange(this.value)"> Đăng ngay</label>
+                    <label><input type="radio" name="post_type" value="scheduled" onchange="handlePostTypeChange(this.value)"> Đặt lịch</label>
+                    <label><input type="radio" name="post_type" value="urgent" onchange="handlePostTypeChange(this.value)"> Đăng khẩn cấp</label>
+                </div>
                 <div class="create-post-actions" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                     <div class="action-options" style="display:flex;gap:18px;align-items:center;">
                         <label for="post-media" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:500;color:#1877f2;"><i class="fas fa-photo-video photo-video"></i> Ảnh/Video</label>
                         <span style="display:flex;align-items:center;gap:6px;color:#ff4444;cursor:pointer;" onclick="showLocationModal()"><i class="fas fa-map-marker-alt location-icon"></i> Thêm vị trí</span>
+                        <span style="display:flex;align-items:center;gap:6px;color:#ff4444;cursor:pointer;" onclick="showScheduleModal()" id="scheduleBtn"><i class="fas fa-calendar-alt"></i> Đặt lịch</span>
                     </div>
                     <input type="file" id="post-media" name="media[]" accept="image/*,video/*" multiple style="display:none;" onchange="previewMedia(event)">
                     <button class="btn-post" type="submit" style="background:#1877f2;color:#fff;padding:10px 32px;border-radius:24px;font-weight:600;font-size:16px;border:none;box-shadow:0 2px 8px rgba(24,119,242,0.08);transition:background 0.2s;">Đăng bài</button>
@@ -201,15 +228,90 @@
 
         <!-- Danh sách bài viết đã đăng -->
         <div class="posts-list">
-            @foreach($posts as $post)
-                @php
-                    $userLiked = $post->likes->contains('user_id', Auth::id());
-                @endphp
+            @php
+                $urgentPosts = $posts->where('status', 'urgent');
+                $normalPosts = $posts->where('status', '!=', 'urgent');
+            @endphp
+            @foreach($urgentPosts as $post)
+                @php $userLiked = $post->likes->contains('user_id', Auth::id()); @endphp
+                <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}" style="border:2px solid #dc3545;box-shadow:0 2px 12px rgba(220,53,69,0.08);">
+                    <div class="post-header">
+                        <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
+                        <div class="post-info">
+                            <h3 style="color:#dc3545;font-weight:bold;">🔥 {{ $post->user->full_name ?? $post->user->username }} <span style="font-size:0.9em;font-weight:400;">(Khẩn cấp)</span></h3>
+                            <span>{{ $post->created_at->diffForHumans() }}</span>
+                        </div>
+                        <!-- Dấu 3 chấm và menu -->
+                        <div class="post-menu-wrapper">
+                            <span class="post-menu-btn" onclick="togglePostMenu(this)">&#x22EE;</span>
+                            <div class="post-menu">
+                                @if(Auth::id() === $post->user_id)
+                                    <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
+                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
+                                @else
+                                    <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-body">
+                        <h4 style="color:#dc3545;">🔥 {{ $post->title }}</h4>
+                        <p>{{ $post->content }}</p>
+                        @if($post->media->isNotEmpty())
+                            @foreach($post->media as $media)
+                                @if(str_contains($media->file_type, 'video'))
+                                    <video controls style="max-width: 100%; max-height: 320px; border-radius: 8px; margin-top: 10px;">
+                                        <source src="{{ asset('storage/' . $media->file_url) }}" type="video/mp4">
+                                    </video>
+                                @else
+                                    <img src="{{ asset('storage/' . $media->file_url) }}" alt="Media" style="max-width: 100%; max-height: 320px; border-radius: 8px; margin-top: 10px; object-fit: contain;">
+                                @endif
+                            @endforeach
+                        @endif
+                    </div>
+                    <div class="post-actions">
+                        <button class="like-btn{{ $userLiked ? ' liked' : '' }}" data-post-id="{{ $post->id }}" style="{{ $userLiked ? 'color:#1877f2;' : '' }}">
+                            Thích (<span id="like-count-{{ $post->id }}">{{ $post->likes->count() }}</span>)
+                        </button>
+                        <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
+                            Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
+                        </button>
+                        <button class="share-btn" onclick="sharePost({{ $post->id }})">
+                            Chia sẻ (<span id="share-count-{{ $post->id }}">{{ $post->shares_count ?? 0 }}</span>)
+                        </button>
+                        <span class="view-count" style="margin-left: 10px; color: #888; font-size: 14px;">
+                            👁️ <span id="view-count-{{ $post->id }}">{{ $post->views->count() }}</span> lượt xem
+                        </span>
+                    </div>
+                    <!-- Phần bình luận -->
+                    <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
+                        @foreach($post->comments as $comment)
+                            <div class="comment" id="comment-{{ $comment->id }}">
+                                <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
+                                <p>{{ $comment->content }}</p>
+                                <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                            </div>
+                        @endforeach
+                        @if(Auth::check())
+                            <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
+                                @csrf
+                                <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>
+                                <button type="submit">Gửi bình luận</button>
+                            </form>
+                        @else
+                            <p><a href="{{ route('login') }}">Đăng nhập</a> để bình luận.</p>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+            @foreach($normalPosts as $post)
+                @php $userLiked = $post->likes->contains('user_id', Auth::id()); @endphp
                 <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                     <div class="post-header">
-                        <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
+                        <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
-                            <h3>{{ $post->user->full_name ?? $post->user->username ?? 'Không xác định' }}</h3>
+                            <h3>{{ $post->user->full_name ?? $post->user->username }}</h3>
                             <span>
                                 {{ $post->created_at->diffForHumans() }}
                                 @if($post->latitude && $post->longitude)
@@ -269,13 +371,13 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->id }}">
-                                <strong>{{ $comment->user->full_name ?? $comment->user->username ?? 'Không xác định' }}</strong>
+                                <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
                                 <p>{{ $comment->content }}</p>
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                         @endforeach
                         @if(Auth::check())
-                            <form class="comment-form" action="{{ route('comments.store') }}" method="POST" style="margin-top: 8px;">
+                            <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->id }}">
                                 <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>
@@ -304,6 +406,18 @@
             <div class="modal-buttons">
                 <button type="button" class="modal-button confirm-button" onclick="confirmLocation()">Chọn vị trí này</button>
                 <button type="button" class="modal-button cancel-button" onclick="hideLocationModal()">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal đặt lịch -->
+    <div id="scheduleModal" class="modal" style="display:none;z-index:99999;">
+        <div class="modal-content" style="width:400px;max-width:90vw;">
+            <h2>Đặt lịch đăng bài</h2>
+            <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="form-control" style="margin:10px 0;">
+            <div class="modal-buttons">
+                <button type="button" class="modal-button confirm-button" onclick="confirmSchedule()">Xác nhận</button>
+                <button type="button" class="modal-button cancel-button" onclick="hideScheduleModal()">Hủy</button>
             </div>
         </div>
     </div>
@@ -507,6 +621,116 @@
             console.error('Report error:', err);
         });
     }
+
+    let autosaveTimer = null;
+    let lastDraft = localStorage.getItem('draft_post') ? JSON.parse(localStorage.getItem('draft_post')) : null;
+
+    function saveDraftAjax() {
+        const title = document.querySelector('input[name="title"]').value;
+        const content = document.getElementById('post-content').value;
+        const draft_id = document.getElementById('draft_id').value;
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('content', content);
+        if (draft_id) formData.append('draft_id', draft_id);
+        fetch('/api/autosave-draft', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.draft_id) {
+                document.getElementById('draft_id').value = data.draft_id;
+                localStorage.setItem('draft_post', JSON.stringify({title, content, draft_id: data.draft_id}));
+            }
+        });
+    }
+
+    function restoreDraft() {
+        if (lastDraft) {
+            document.querySelector('input[name="title"]').value = lastDraft.title || '';
+            document.getElementById('post-content').value = lastDraft.content || '';
+            document.getElementById('draft_id').value = lastDraft.draft_id || '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        restoreDraft();
+        const titleInput = document.querySelector('input[name="title"]');
+        const contentInput = document.getElementById('post-content');
+        [titleInput, contentInput].forEach(input => {
+            input.addEventListener('input', function() {
+                if (autosaveTimer) clearTimeout(autosaveTimer);
+                autosaveTimer = setTimeout(saveDraftAjax, 10000);
+            });
+        });
+        window.addEventListener('beforeunload', saveDraftAjax);
+    });
+
+    function showScheduleModal() {
+        document.getElementById('scheduleModal').style.display = 'flex';
+    }
+    function hideScheduleModal() {
+        document.getElementById('scheduleModal').style.display = 'none';
+    }
+    function confirmSchedule() {
+        const scheduledAt = document.getElementById('scheduled_at').value;
+        if (scheduledAt) {
+            document.querySelector('input[name="scheduled_at"]').value = scheduledAt;
+            hideScheduleModal();
+        } else {
+            alert('Vui lòng chọn thời gian đăng bài!');
+        }
+    }
+
+    function handlePostTypeChange(type) {
+        if (type === 'scheduled') {
+            document.getElementById('scheduleBtn').style.display = 'inline-flex';
+        } else {
+            document.getElementById('scheduleBtn').style.display = 'none';
+            document.getElementById('scheduled_at').value = '';
+            document.querySelector('input[name="scheduled_at"]').value = '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        handlePostTypeChange(document.querySelector('input[name="post_type"]:checked').value);
+    });
+
+    // Bell notification logic
+    let bellNoti = [];
+    @if(session('success'))
+        bellNoti.push({type:'success',msg:`{{ session('success') }}`});
+    @endif
+    @if(session('error'))
+        bellNoti.push({type:'error',msg:`{{ session('error') }}`});
+    @endif
+    function renderBellList() {
+        const list = document.getElementById('bell-list');
+        if (!bellNoti.length) {
+            list.innerHTML = '<div style="padding:16px;color:#888;">Không có thông báo mới</div>';
+        } else {
+            list.innerHTML = bellNoti.map(n => `<div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;color:${n.type==='success'?'#28a745':'#dc3545'};font-weight:500;">${n.msg}</div>`).join('');
+        }
+        document.getElementById('bell-badge').style.display = bellNoti.length ? 'block' : 'none';
+        document.getElementById('bell-badge').textContent = bellNoti.length;
+    }
+    document.getElementById('bell-icon').onclick = function() {
+        const dropdown = document.getElementById('bell-dropdown');
+        dropdown.style.display = dropdown.style.display==='block' ? 'none' : 'block';
+        renderBellList();
+    };
+    // Ẩn dropdown khi click ngoài
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('bell-notification').contains(e.target)) {
+            document.getElementById('bell-dropdown').style.display = 'none';
+        }
+    });
+    // Hiển thị badge nếu có noti
+    renderBellList();
     </script>
 </body>
 </html>

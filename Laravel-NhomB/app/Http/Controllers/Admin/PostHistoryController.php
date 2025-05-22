@@ -5,42 +5,35 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PostHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PostHistoryController extends Controller
 {
     public function index()
     {
-        $histories = PostHistory::with(['post', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-            
-        return view('admin.quanlylichdangbai', compact('histories'));
+        $histories = PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->paginate(10);
+        return view('admin.post-history', compact('histories'));
     }
 
     public function filter(Request $request)
     {
         $query = PostHistory::with(['post', 'user']);
-
-        if ($request->action) {
+        if ($request->has('action')) {
             $query->where('action', $request->action);
         }
-
-        if ($request->date) {
-            $query->whereDate('created_at', $request->date);
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->user_id);
         }
-
-        if ($request->search) {
-            $query->whereHas('post', function($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%');
-            });
+        if ($request->has('post_id')) {
+            $query->where('post_id', $request->post_id);
         }
-
-        $histories = $query->orderBy('created_at', 'desc')->paginate(20);
-
-        if ($request->ajax()) {
-            return response()->json($histories);
+        if ($request->has('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
         }
-
-        return view('admin.quanlylichdangbai', compact('histories'));
+        if ($request->has('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+        $histories = $query->orderBy('created_at', 'desc')->paginate(10);
+        return view('admin.post-history', compact('histories'));
     }
 } 

@@ -55,7 +55,7 @@
                     <li><a href="{{ route('admin.baichoduyet') }}">BÀI CHỜ DUYỆT</a></li>
                     <li><a href="{{ route('admin.baidaduyet') }}">BÀI ĐÃ DUYỆT</a></li>
                     <li><a href="{{ route('admin.lichdangbai') }}">LỊCH ĐĂNG BÀI</a></li>
-                    <li><a href="{{ route('admin.phantichtruycap') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
+                    <li><a href="{{ route('admin.quanlybinhluan') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
                     <li><a href="#" onclick="showLogoutModal()">ĐĂNG XUẤT</a></li>
                 </ul>
             </div>
@@ -63,7 +63,7 @@
             <div class="admin-main">
                 <div class="interaction-actions" style="margin-bottom: 24px;">
                     <a href="{{ route('admin.quanlybinhluan') }}"><button class="interaction-btn selected">QUẢN LÝ BÌNH LUẬN</button></a>
-                    <a href="{{ route('admin.tuongtac') }}"><button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button></a>
+                    <a href="{{ route('admin.quanlytuongtac') }}"><button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button></a>
                     <a href="{{ route('admin.theodoiluotxem') }}"><button class="interaction-btn">THEO DÕI LƯỢT XEM</button></a>
                     <a href="{{ route('admin.xuatdulieu') }}"><button class="interaction-btn">XUẤT DỮ LIỆU</button></a>
                     <a href="{{ route('admin.baocaohieusuat') }}"><button class="interaction-btn">BÁO CÁO</button></a>
@@ -98,8 +98,6 @@
                                 </div>
                             </div>
                             <div class="comment-actions">
-                                <button onclick="showEditForm({{ $comment->id }})">Sửa</button>
-                                <button onclick="deleteComment({{ $comment->id }})">Xóa</button>
                             </div>
                         </div>
                     @empty
@@ -109,6 +107,22 @@
             </div>
         </div>
     </div>
+
+    {{-- Logout Modal --}}
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <h2>Xác nhận đăng xuất</h2>
+            <p>Bạn có chắc chắn muốn đăng xuất không?</p>
+            <div class="modal-buttons">
+                <button class="modal-button confirm-button" onclick="confirmLogout()">Đăng xuất</button>
+                <button class="modal-button cancel-button" onclick="hideLogoutModal()">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
 
     <script>
         // Lấy CSRF token từ meta tag
@@ -232,6 +246,27 @@
                 searchComments();
             }
         });
+
+        //quanlybainguoidung.blade.php đăng xuất
+        function showLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            document.getElementById('logout-form').submit();
+        }
+
+        // Đóng modal khi click ra ngoài
+        window.onclick = function(event) {
+            var modal = document.getElementById('logoutModal');
+            if (event.target == modal) {
+                hideLogoutModal();
+            }
+        }
     </script>
 </body>
 </html>
