@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
 
 // Route bình luận cho user thường (phải đặt ngoài group admin)
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store')->middleware('auth');
+Route::put('/comments/{id}', [App\Http\Controllers\CommentController::class, 'update'])->name('comments.update')->middleware('auth');
 
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -69,6 +70,29 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/posts/{post}', [AdminPostController::class, 'show'])->name('posts.show');
     Route::post('/posts/{post}/approve', [AdminPostController::class, 'approve'])->name('posts.approve');
     Route::post('/posts/{post}/reject', [AdminPostController::class, 'reject'])->name('posts.reject');
+    
+    // Quản lý bình luận
+    Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
+    
+    // Tương tác
+    Route::get('/tuongtac', [InteractionController::class, 'index'])->name('tuongtac');
+    
+    // Theo dõi lượt xem
+    Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
+    
+    // Xuất dữ liệu
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
+    Route::get('/tracking', [AnalyticsController::class, 'viewTracking'])->name('tracking');
+    Route::get('/performance-report', [AnalyticsController::class, 'performanceReport'])->name('performance-report');
+    Route::get('/send-notification', [AnalyticsController::class, 'sendNotification'])->name('send-notification');
+    Route::get('/xuatdulieu', [AnalyticsController::class, 'exportData'])->name('xuatdulieu');
+    Route::get('/xuatdulieu/export', [AnalyticsController::class, 'export'])->name('xuatdulieu.export');
+    
+    // Báo cáo hiệu suất
+    Route::get('/baocaohieusuat', [AnalyticsController::class, 'performanceReport'])->name('baocaohieusuat');
+    
+    // Gửi thông báo
+    Route::get('/guithongbao', [AnalyticsController::class, 'sendNotification'])->name('guithongbao');
     
     // Các trang khác
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
@@ -88,14 +112,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/quanlytuongtac', [InteractionController::class, 'index'])->name('quanlytuongtac');
 
     Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
-
-    Route::get('/xuatdulieu', function() {
-        return view('admin.xuatdulieu');
-    })->name('xuatdulieu');
-
-    Route::get('/baocaohieusuat', function() {
-        return view('admin.baocaohieusuat');
-    })->name('baocaohieusuat');
 
     Route::get('/guithongbao', function() {
         return view('admin.guithongbao');

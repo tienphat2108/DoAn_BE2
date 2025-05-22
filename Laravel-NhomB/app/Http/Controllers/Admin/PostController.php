@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -18,60 +17,66 @@ class PostController extends Controller
 
     public function approve($id)
     {
-        $post = Post::findOrFail($id);
-        $post->status = 'pending';
+        $post         = Post::findOrFail($id);
+        $post->status = 'approved'; // ✅ Đăng bài lên hệ thống
         $post->save();
-        // Ghi lịch sử
+
+        // Ghi lại lịch sử duyệt bài
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
             'user_id' => Auth::id(),
-            'action' => 'move_to_pending',
-            'details' => 'Bài viết được chuyển sang chờ duyệt bởi admin'
+            'action'  => 'approve',
+            'details' => 'Bài viết đã được duyệt và đăng tải lên hệ thống',
         ]);
-        return redirect()->back()->with('success', 'Bài viết đã được chuyển sang chờ duyệt.');
+
+        return redirect()->route('admin.baichoduyet')
+            ->with('success', 'Bài viết đã được duyệt và đăng lên hệ thống.');
     }
 
     public function reject($id)
     {
-        $post = Post::findOrFail($id);
+        $post         = Post::findOrFail($id);
         $post->status = 'bị từ chối';
         $post->save();
-        // Ghi lịch sử từ chối bài viết
+
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
             'user_id' => Auth::id(),
-            'action' => 'reject',
-            'details' => 'Bài viết đã bị từ chối'
+            'action'  => 'reject',
+            'details' => 'Bài viết đã bị từ chối',
         ]);
+
         return redirect()->back()->with('error', 'Đã từ chối bài viết.');
     }
 
     public function requestEdit(Request $request, $id)
     {
-        $post = Post::findOrFail($id);
-        $post->status = 'yêu cầu chỉnh sửa';
+        $post             = Post::findOrFail($id);
+        $post->status     = 'yêu cầu chỉnh sửa';
         $post->admin_note = $request->input('note');
         $post->save();
-        // Ghi lịch sử yêu cầu chỉnh sửa bài viết
+
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
             'user_id' => Auth::id(),
-            'action' => 'request_edit',
-            'details' => 'Yêu cầu chỉnh sửa bài viết: ' . $request->input('note')
+            'action'  => 'request_edit',
+            'details' => 'Yêu cầu chỉnh sửa bài viết: ' . $request->input('note'),
         ]);
+
         return redirect()->back()->with('info', 'Đã gửi yêu cầu chỉnh sửa.');
     }
 
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
-        // Ghi lịch sử xóa bài viết
+
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
             'user_id' => Auth::id(),
-            'action' => 'delete',
-            'details' => 'Bài viết đã bị xóa bởi admin'
+            'action'  => 'delete',
+            'details' => 'Bài viết đã bị xóa bởi admin',
         ]);
+
         $post->delete();
         return redirect()->back()->with('success', 'Bài viết đã được xóa thành công.');
     }
@@ -90,40 +95,41 @@ class PostController extends Controller
 
     public function postSchedule()
     {
-        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->with('user')->get();
-        $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories'));
+        // Lấy tất cả bài viết cho tab 'All'
+        $allPosts = Post::orderBy('created_at', 'desc')->with(['user', 'media'])->get();
+        // Lấy bài viết đã lên lịch cho tab 'Lịch trình Đăng Bài'
+        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
+        $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->get();
+        return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories', 'allPosts'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|max:255',
-            'content' => 'required',
-            'status' => 'required|in:pending,approved,scheduled',
+            'title'        => 'required|max:255',
+            'content'      => 'required',
+            'status'       => 'required|in:pending,approved,scheduled',
             'scheduled_at' => 'nullable|date|after:now',
-            'media.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4|max:10240',
+            'media.*'      => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4|max:10240',
         ]);
 
         $validated['user_id'] = auth()->id();
-        $post = Post::create($validated);
+        $post                 = Post::create($validated);
 
-        // Ghi lại lịch sử
         PostHistory::create([
             'post_id' => $post->id,
             'user_id' => auth()->id(),
-            'action' => 'create',
-            'details' => 'Bài viết mới được tạo'
+            'action'  => 'create',
+            'details' => 'Bài viết mới được tạo',
         ]);
 
-        // Lưu media nếu có
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
                 $path = $file->store('media', 'public');
                 $type = $file->getClientMimeType();
                 \App\Models\Media::create([
-                    'post_id' => $post->id,
-                    'file_url' => $path,
+                    'post_id'   => $post->id,
+                    'file_url'  => $path,
                     'file_type' => $type,
                 ]);
             }
@@ -135,18 +141,20 @@ class PostController extends Controller
 
     public function scheduleMulti(Request $request)
     {
-        $postIds = $request->input('post_ids', []);
+        $postIds      = $request->input('post_ids', []);
         $scheduledAts = $request->input('scheduled_at', []);
-        $count = 0;
+        $count        = 0;
+
         foreach ($postIds as $postId) {
             $post = \App\Models\Post::find($postId);
-            if ($post && !empty($scheduledAts[$postId])) {
+            if ($post && ! empty($scheduledAts[$postId])) {
                 $post->scheduled_at = $scheduledAts[$postId];
-                $post->status = 'scheduled';
+                $post->status       = 'scheduled';
                 $post->save();
                 $count++;
             }
         }
+
         return redirect()->route('admin.lichdangbai')->with('success', 'Đã lên lịch cho ' . $count . ' bài viết!');
     }
 
@@ -154,35 +162,37 @@ class PostController extends Controller
     {
         $posts = $request->input('posts', []);
         $count = 0;
+
         foreach ($posts as $row) {
-            if (!empty($row['title']) && !empty($row['scheduled_at'])) {
-                $post = new \App\Models\Post();
-                $post->title = $row['title'];
-                $post->content = $row['content'] ?? '';
-                $post->user_id = auth()->id(); // hoặc chọn user khác nếu cần
-                $post->status = 'scheduled';
+            if (! empty($row['title']) && ! empty($row['scheduled_at'])) {
+                $post               = new \App\Models\Post();
+                $post->title        = $row['title'];
+                $post->content      = $row['content'] ?? '';
+                $post->user_id      = auth()->id();
+                $post->status       = 'scheduled';
                 $post->scheduled_at = $row['scheduled_at'];
                 $post->save();
                 $count++;
             }
         }
+
         return response()->json(['success' => true, 'count' => $count]);
     }
 
-    // Chuyển bài viết từ Bản nháp sang Chờ duyệt
     public function moveToPending($id)
     {
         $post = Post::findOrFail($id);
         if ($post->status === 'bản nháp' || $post->status === 'draft') {
             $post->status = 'pending';
             $post->save();
-            // Ghi lịch sử chuyển trạng thái
+
             \App\Models\PostHistory::create([
                 'post_id' => $post->id,
                 'user_id' => Auth::id(),
-                'action' => 'move_to_pending',
-                'details' => 'Bài viết được chuyển từ bản nháp sang chờ duyệt bởi admin'
+                'action'  => 'move_to_pending',
+                'details' => 'Bài viết được chuyển từ bản nháp sang chờ duyệt bởi admin',
             ]);
+
             return redirect()->back()->with('success', 'Đã chuyển bài viết sang trạng thái chờ duyệt.');
         } else {
             return redirect()->back()->with('error', 'Bài viết không ở trạng thái bản nháp.');
@@ -194,4 +204,4 @@ class PostController extends Controller
         $post = \App\Models\Post::with(['user', 'media'])->findOrFail($id);
         return view('admin.posts.show', compact('post'));
     }
-} 
+}

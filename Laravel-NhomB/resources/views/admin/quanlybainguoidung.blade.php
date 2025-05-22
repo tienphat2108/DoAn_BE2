@@ -98,7 +98,7 @@
                                             <button type="submit" class="btn-approve">Duyệt</button>
                                         </form>
                                     @endif
-                                    <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;">
+                                    <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn-delete">Xóa</button>

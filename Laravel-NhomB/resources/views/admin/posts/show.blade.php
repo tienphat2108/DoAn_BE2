@@ -9,8 +9,6 @@
         <div class="card-body">
             <h4>{{ $post->title }}</h4>
             <p class="text-muted">Người đăng: <strong>{{ $post->user->name }}</strong></p>
-            <p><strong>Nội dung:</strong></p>
-            <div style="border: 1px solid #eee; border-radius: 8px; padding: 12px; background: #fafafa;">{!! nl2br(e($post->content)) !!}</div>
             @if($post->media && $post->media->count() > 0)
                 <div class="mt-3">
                     <strong>Media đính kèm:</strong>

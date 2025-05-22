@@ -33,6 +33,29 @@
             padding: 5px;
             margin-bottom: 5px;
         }
+        .edit-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .edit-btn:hover {
+            background-color: #218838;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -88,16 +111,12 @@
                 </div>
                 <div class="comment-list">
                     @forelse($comments as $comment)
-                        <div class="comment-item" id="comment-{{ $comment->id }}">
+                        <div class="comment-item" id="comment-{{ $comment->comment_id }}">
                             <div class="comment-content">
                                 <b>{{ $comment->user->name }}:</b> <span class="comment-text">{{ $comment->content }}</span>
-                                <div class="edit-form">
-                                    <input type="text" class="edit-input" value="{{ $comment->content }}">
-                                    <button onclick="updateComment({{ $comment->id }}, this.parentElement)">Lưu</button>
-                                    <button onclick="cancelEdit(this.parentElement)">Hủy</button>
-                                </div>
                             </div>
                             <div class="comment-actions">
+                                <button onclick="deleteComment({{ $comment->comment_id }})" class="delete-btn">Xóa</button>
                             </div>
                         </div>
                     @empty
@@ -127,54 +146,6 @@
     <script>
         // Lấy CSRF token từ meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        // Hàm hiển thị form sửa bình luận
-        function showEditForm(commentId) {
-            const commentItem = document.querySelector(`#comment-${commentId}`);
-            const editForm = commentItem.querySelector('.edit-form');
-            const commentText = commentItem.querySelector('.comment-text');
-            
-            editForm.style.display = 'block';
-            commentText.style.display = 'none';
-        }
-
-        // Hàm hủy sửa bình luận
-        function cancelEdit(editForm) {
-            const commentText = editForm.parentElement.querySelector('.comment-text');
-            editForm.style.display = 'none';
-            commentText.style.display = 'inline';
-        }
-
-        // Hàm cập nhật bình luận
-        function updateComment(commentId, editForm) {
-            const newContent = editForm.querySelector('.edit-input').value;
-            
-            fetch(`/admin/comments/${commentId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    content: newContent
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const commentItem = document.querySelector(`#comment-${commentId}`);
-                    const commentText = commentItem.querySelector('.comment-text');
-                    commentText.textContent = newContent;
-                    cancelEdit(editForm);
-                } else {
-                    alert('Có lỗi xảy ra khi cập nhật bình luận');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi cập nhật bình luận');
-            });
-        }
 
         // Hàm xóa bình luận
         function deleteComment(commentId) {
