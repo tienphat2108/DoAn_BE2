@@ -7,6 +7,7 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PostEditRequest;
+use Illuminate\Support\Facades\Log;
 
 class PostApprovalController extends Controller
 {
@@ -74,6 +75,8 @@ class PostApprovalController extends Controller
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
 
+        Log::info('Ngày lọc: ' . $date);
+
         // Thống kê theo ngày
         $dailyStats = Post::where('status', 'approved')
             ->whereDate('approved_at', $date)
@@ -92,6 +95,7 @@ class PostApprovalController extends Controller
             ->get();
 
         return response()->json([
+            'date_input' => $date,
             'daily_count' => $dailyStats,
             'range_count' => $rangeStats,
             'detailed_stats' => $detailedStats
