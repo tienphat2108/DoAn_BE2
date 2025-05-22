@@ -199,6 +199,7 @@
             @csrf
             <input type="hidden" name="status" value="pending">
             <input type="hidden" name="draft_id" id="draft_id" value="{{ session('draft_id') ?? '' }}">
+            <input type="hidden" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}">
             <div class="create-post-header" style="display:flex;align-items:center;gap:16px;">
                 <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
                 <input type="text" name="content" id="post-content" placeholder="Bạn đang nghĩ gì thế?" style="flex:1;padding:14px 18px;border-radius:24px;border:1px solid #e4e6eb;background:#f0f2f5;font-size:16px;">
@@ -210,6 +211,7 @@
                     <label><input type="radio" name="post_type" value="scheduled" onchange="handlePostTypeChange(this.value)"> Đặt lịch</label>
                     <label><input type="radio" name="post_type" value="urgent" onchange="handlePostTypeChange(this.value)"> Đăng khẩn cấp</label>
                 </div>
+                <div id="scheduled-time-display" style="display:none; margin-bottom: 12px; font-weight: 500; color: #007bff;"></div>
                 <div class="create-post-actions" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                     <div class="action-options" style="display:flex;gap:18px;align-items:center;">
                         <label for="post-media" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:500;color:#1877f2;"><i class="fas fa-photo-video photo-video"></i> Ảnh/Video</label>
@@ -238,7 +240,7 @@
                     <div class="post-header">
                         <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
-                            <h3 style="color:#dc3545;font-weight:bold;">🔥 {{ $post->user->full_name ?? $post->user->username }} <span style="font-size:0.9em;font-weight:400;">(Khẩn cấp)</span></h3>
+                            <h3 style="color:#dc3545;font-weight:bold;">🔥 {{ optional($post->user)->full_name ?? optional($post->user)->username ?? '[Người dùng đã xóa]' }} <span style="font-size:0.9em;font-weight:400;">(Khẩn cấp)</span></h3>
                             <span>{{ $post->created_at->diffForHumans() }}</span>
                         </div>
                         <!-- Dấu 3 chấm và menu -->
@@ -247,7 +249,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
+                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -286,9 +288,17 @@
                     <!-- Phần bình luận -->
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
-                            <div class="comment" id="comment-{{ $comment->id }}">
-                                <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
-                                <p>{{ $comment->content }}</p>
+                            <div class="comment" id="comment-{{ $comment->comment_id }}">
+                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                <p class="comment-content">{{ $comment->content }}</p>
+                                @if(Auth::id() === $comment->user_id)
+                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
+                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                    </form>
+                                @endif
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                         @endforeach
@@ -311,7 +321,7 @@
                     <div class="post-header">
                         <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
-                            <h3>{{ $post->user->full_name ?? $post->user->username }}</h3>
+                            <h3>{{ optional($post->user)->full_name ?? optional($post->user)->username ?? '[Người dùng đã xóa]' }}</h3>
                             <span>
                                 {{ $post->created_at->diffForHumans() }}
                                 @if($post->latitude && $post->longitude)
@@ -331,7 +341,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
+                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -370,9 +380,17 @@
                     <!-- Phần bình luận -->
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
-                            <div class="comment" id="comment-{{ $comment->id }}">
-                                <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
-                                <p>{{ $comment->content }}</p>
+                            <div class="comment" id="comment-{{ $comment->comment_id }}">
+                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                <p class="comment-content">{{ $comment->content }}</p>
+                                @if(Auth::id() === $comment->user_id)
+                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
+                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                    </form>
+                                @endif
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                         @endforeach
@@ -414,7 +432,7 @@
     <div id="scheduleModal" class="modal" style="display:none;z-index:99999;">
         <div class="modal-content" style="width:400px;max-width:90vw;">
             <h2>Đặt lịch đăng bài</h2>
-            <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="form-control" style="margin:10px 0;">
+            <input type="datetime-local" id="scheduled_at_modal" class="form-control" style="margin:10px 0;">
             <div class="modal-buttons">
                 <button type="button" class="modal-button confirm-button" onclick="confirmSchedule()">Xác nhận</button>
                 <button type="button" class="modal-button cancel-button" onclick="hideScheduleModal()">Hủy</button>
@@ -677,22 +695,40 @@
         document.getElementById('scheduleModal').style.display = 'none';
     }
     function confirmSchedule() {
-        const scheduledAt = document.getElementById('scheduled_at').value;
+        const scheduledAt = document.getElementById('scheduled_at_modal').value;
         if (scheduledAt) {
             document.querySelector('input[name="scheduled_at"]').value = scheduledAt;
             hideScheduleModal();
+            const displayDiv = document.getElementById('scheduled-time-display');
+            if (displayDiv) {
+                const dateObj = new Date(scheduledAt);
+                const formattedDate = dateObj.toLocaleDateString('vi-VN') + ' ' + dateObj.toLocaleTimeString('vi-VN');
+                displayDiv.textContent = 'Thời gian đặt lịch: ' + formattedDate;
+                displayDiv.style.display = 'block';
+            }
         } else {
             alert('Vui lòng chọn thời gian đăng bài!');
         }
     }
 
     function handlePostTypeChange(type) {
-        if (type === 'scheduled') {
-            document.getElementById('scheduleBtn').style.display = 'inline-flex';
+        const scheduleDiv = document.getElementById('scheduled-time-display');
+        const statusInput = document.querySelector('input[name="status"]');
+
+        if (statusInput) {
+            if (type === 'now') {
+                statusInput.value = 'pending';
+            } else if (type === 'scheduled') {
+                statusInput.value = 'scheduled';
+            } else if (type === 'urgent') {
+                statusInput.value = 'urgent';
+            }
+        }
+
+        if (type === 'scheduled' && scheduleDiv.textContent !== '') {
+            scheduleDiv.style.display = 'block';
         } else {
-            document.getElementById('scheduleBtn').style.display = 'none';
-            document.getElementById('scheduled_at').value = '';
-            document.querySelector('input[name="scheduled_at"]').value = '';
+            scheduleDiv.style.display = 'none';
         }
     }
 
@@ -731,6 +767,43 @@
     });
     // Hiển thị badge nếu có noti
     renderBellList();
+
+    function showEditCommentForm(commentId) {
+        document.getElementById('edit-comment-form-' + commentId).style.display = 'inline-block';
+        document.querySelector('#comment-' + commentId + ' .comment-content').style.display = 'none';
+    }
+    function cancelEditComment(commentId) {
+        document.getElementById('edit-comment-form-' + commentId).style.display = 'none';
+        document.querySelector('#comment-' + commentId + ' .comment-content').style.display = 'block';
+    }
+    function submitEditComment(commentId, btn) {
+        var form = document.getElementById('edit-comment-form-' + commentId);
+        var input = form.querySelector('.edit-comment-input');
+        var newContent = input.value.trim();
+        if (!newContent) { alert('Nội dung không được để trống!'); return; }
+        fetch('/comments/' + commentId, {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ content: newContent })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('#comment-' + commentId + ' .comment-content').textContent = newContent;
+                cancelEditComment(commentId);
+            } else {
+                alert('Có lỗi khi cập nhật bình luận!');
+            }
+        })
+        .catch(err => {
+            alert('Có lỗi khi cập nhật bình luận!');
+            console.error(err);
+        });
+    }
     </script>
 </body>
 </html>
