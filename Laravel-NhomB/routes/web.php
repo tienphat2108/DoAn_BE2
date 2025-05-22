@@ -117,6 +117,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return view('admin.guithongbao');
     })->name('guithongbao');
 
+    // Trang thống kê số lượng bài duyệt
+    Route::get('/thongkebaiduyet', function() {
+        return view('admin.post-approval-stats');
+    })->name('thongkebaiduyet');
+
+    // API thống kê số lượng bài duyệt
+    Route::get('/api/post-approval-stats', [PostApprovalController::class, 'getApprovalStats'])->name('post-approval-stats');
+
     Route::post('/lichdangbai/schedule-multi', [App\Http\Controllers\Admin\PostController::class, 'scheduleMulti'])->name('scheduleMulti');
 
     Route::post('/bulk-schedule', [App\Http\Controllers\Admin\PostController::class, 'bulkSchedule'])->name('bulkSchedule');
