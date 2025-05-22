@@ -238,7 +238,7 @@
                     <div class="post-header">
                         <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
-                            <h3 style="color:#dc3545;font-weight:bold;">🔥 {{ $post->user->full_name ?? $post->user->username }} <span style="font-size:0.9em;font-weight:400;">(Khẩn cấp)</span></h3>
+                            <h3 style="color:#dc3545;font-weight:bold;">🔥 {{ optional($post->user)->full_name ?? optional($post->user)->username ?? '[Người dùng đã xóa]' }} <span style="font-size:0.9em;font-weight:400;">(Khẩn cấp)</span></h3>
                             <span>{{ $post->created_at->diffForHumans() }}</span>
                         </div>
                         <!-- Dấu 3 chấm và menu -->
@@ -287,7 +287,7 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->id }}">
-                                <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
+                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
                                 <p>{{ $comment->content }}</p>
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
@@ -311,7 +311,7 @@
                     <div class="post-header">
                         <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
-                            <h3>{{ $post->user->full_name ?? $post->user->username }}</h3>
+                            <h3>{{ optional($post->user)->full_name ?? optional($post->user)->username ?? '[Người dùng đã xóa]' }}</h3>
                             <span>
                                 {{ $post->created_at->diffForHumans() }}
                                 @if($post->latitude && $post->longitude)
@@ -371,7 +371,7 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->id }}">
-                                <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
+                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
                                 <p>{{ $comment->content }}</p>
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
