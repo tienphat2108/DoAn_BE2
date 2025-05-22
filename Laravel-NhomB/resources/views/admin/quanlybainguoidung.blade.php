@@ -87,7 +87,7 @@
                                 <td>{{ $post->created_at->format('d/m/Y') }}</td>
                                 <td class="action-cell">
                                     @if($post->status == 'pending')
-                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block;">
+                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;" onsubmit="return confirm('Bạn có chắc chắn muốn duyệt bài viết này không?');">
                                             @csrf
                                             <button type="submit" class="btn-approve">Duyệt</button>
                                         </form>
@@ -98,7 +98,7 @@
                                             <button type="submit" class="btn-approve">Chờ duyệt</button>
                                         </form>
                                     @endif
-                                    <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;">
+                                    <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn-delete">Xóa</button>
