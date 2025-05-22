@@ -84,12 +84,14 @@ class PostApprovalController extends Controller
 
         // Thống kê theo khoảng thời gian
         $rangeStats = Post::where('status', 'approved')
-            ->whereBetween('approved_at', [$startDate, $endDate])
+            ->whereDate('approved_at', '>=', $startDate)
+            ->whereDate('approved_at', '<=', $endDate)
             ->count();
 
         // Thống kê chi tiết theo ngày trong khoảng thời gian
         $detailedStats = Post::where('status', 'approved')
-            ->whereBetween('approved_at', [$startDate, $endDate])
+            ->whereDate('approved_at', '>=', $startDate)
+            ->whereDate('approved_at', '<=', $endDate)
             ->selectRaw('DATE(approved_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->get();
