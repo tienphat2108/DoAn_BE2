@@ -34,7 +34,6 @@
 
             <div class="admin-main">
                 <h2>ADMIN quản lý bài đăng</h2>
-                
                 @if(session('success'))
                     <div class="alert alert-success">
                         {{ session('success') }}
@@ -79,8 +78,10 @@
                                         Yêu cầu duyệt
                                     @elseif($post->status == 'approved')
                                         Đã duyệt
-                                    @else
+                                    @elseif($post->status == 'bản nháp' || $post->status == 'draft')
                                         Bản nháp
+                                    @else
+                                        {{ $post->status }}
                                     @endif
                                 </td>
                                 <td>{{ $post->created_at->format('d/m/Y') }}</td>
@@ -88,7 +89,13 @@
                                     @if($post->status == 'pending')
                                         <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block;">
                                             @csrf
-                                            <button type="submit" class="btn-approve">Gửi</button>
+                                            <button type="submit" class="btn-approve">Duyệt</button>
+                                        </form>
+                                    @elseif($post->status == 'bản nháp' || $post->status == 'draft')
+                                        <form action="{{ route('admin.posts.moveToPending', $post->id) }}" method="POST" style="display: inline-block;">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="btn-approve">Chờ duyệt</button>
                                         </form>
                                     @endif
                                     <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;">
@@ -147,5 +154,38 @@
             }
         }
     </script>
+
+    <style>
+        .filter-bar select, .filter-bar input[type="date"], .filter-bar .filter-search {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            margin-right: 0;
+            outline: none;
+            min-width: 140px;
+        }
+        .filter-bar .filter-search {
+            min-width: 200px;
+        }
+        .filter-bar .filter-btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            background: #222;
+            color: #fff;
+            font-weight: 600;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .filter-bar .filter-btn:hover {
+            background: #444;
+        }
+        @media (max-width: 900px) {
+            .filter-bar { flex-direction: column; gap: 10px; }
+            .filter-bar select, .filter-bar input, .filter-bar .filter-btn { width: 100%; min-width: 0; }
+        }
+    </style>
 </body>
 </html> 

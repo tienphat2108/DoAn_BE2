@@ -7,11 +7,14 @@ use App\Http\Controllers\Auth\TrangChuController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\PostHistoryController;
 use Illuminate\View\View;
 use App\Http\Controllers\Admin\InteractionController;
 use App\Http\Controllers\Admin\AdminCommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\Admin\PostApprovalController;
+use App\Http\Controllers\Admin\ViewTrackingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +38,7 @@ Route::post('/register', [RegisterController::class, 'register']);
 
 // User Routes
 Route::middleware('auth')->group(function () {
-    Route::get('/home', [TrangChuController::class, 'index'])->name('trangchu');
+    // Route::get('/home', [TrangChuController::class, 'index'])->name('trangchu'); // Đã comment để tránh trùng tên
     Route::get('/trangchu', [TrangChuController::class, 'index'])->name('trangchu');
     Route::get('/canhan', [TrangChuController::class, 'canhan'])->name('canhan');
     Route::post('/canhan/avatar', [TrangChuController::class, 'updateAvatar'])->name('canhan.avatar');
@@ -44,7 +47,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
     Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
     Route::post('/posts/{post}/report', [PostController::class, 'report'])->name('posts.report')->middleware('auth');
+    Route::post('/canhan/schedule-multi', [App\Http\Controllers\Auth\TrangChuController::class, 'scheduleMulti'])->name('canhan.scheduleMulti');
 });
+
+// Route bình luận cho user thường (phải đặt ngoài group admin)
+Route::post('/comments', [CommentController::class, 'store'])->name('comments.store')->middleware('auth');
 
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -57,17 +64,66 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/quanlybainguoidung/{post}/approve', [AdminPostController::class, 'approve'])->name('approvePost');
     Route::delete('/quanlybainguoidung/{post}', [AdminPostController::class, 'destroy'])->name('deletePost');
     
+    // Quản lý bài viết chờ duyệt
+    Route::get('/pending-posts', [PostApprovalController::class, 'index'])->name('pending-posts');
+    Route::post('/posts/{post}/approve', [PostApprovalController::class, 'approve'])->name('posts.approve');
+    Route::post('/posts/{post}/reject', [PostApprovalController::class, 'reject'])->name('posts.reject');
+    
+    // Quản lý bình luận
+    Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
+    
+    // Tương tác
+    Route::get('/tuongtac', [InteractionController::class, 'index'])->name('tuongtac');
+    
+    // Theo dõi lượt xem
+    Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
+    
+    // Xuất dữ liệu
+    Route::get('/xuatdulieu', [AnalyticsController::class, 'exportData'])->name('xuatdulieu');
+    
+    // Báo cáo hiệu suất
+    Route::get('/baocaohieusuat', [AnalyticsController::class, 'performanceReport'])->name('baocaohieusuat');
+    
+    // Gửi thông báo
+    Route::get('/guithongbao', [AnalyticsController::class, 'sendNotification'])->name('guithongbao');
+    
     // Các trang khác
     Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
     Route::get('/lichdangbai', [AdminPostController::class, 'postSchedule'])->name('lichdangbai');
     Route::get('/phantichtruycap', [AnalyticsController::class, 'index'])->name('phantichtruycap');
+    
+    // Lịch sử đăng bài
+    Route::get('/post-history', [PostHistoryController::class, 'index'])->name('post-history');
+    Route::post('/api/post-history/filter', [PostHistoryController::class, 'filter'])->name('post-history.filter');
 
     // Quản lý bình luận
     Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
     Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
     Route::put('/comments/{id}', [AdminCommentController::class, 'update'])->name('comments.update');
-    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+
+    // Quản lý tương tác
+    Route::get('/quanlytuongtac', [InteractionController::class, 'index'])->name('quanlytuongtac');
+
+    Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
+
+    Route::get('/xuatdulieu', function() {
+        return view('admin.xuatdulieu');
+    })->name('xuatdulieu');
+
+    Route::get('/baocaohieusuat', function() {
+        return view('admin.baocaohieusuat');
+    })->name('baocaohieusuat');
+
+    Route::get('/guithongbao', function() {
+        return view('admin.guithongbao');
+    })->name('guithongbao');
+
+    Route::post('/lichdangbai/schedule-multi', [App\Http\Controllers\Admin\PostController::class, 'scheduleMulti'])->name('scheduleMulti');
+
+    Route::post('/bulk-schedule', [App\Http\Controllers\Admin\PostController::class, 'bulkSchedule'])->name('bulkSchedule');
+
+    Route::put('/posts/{post}/move-to-pending', [App\Http\Controllers\Admin\PostController::class, 'moveToPending'])->name('posts.moveToPending');
 });
 
 // Redirect root to login
@@ -81,29 +137,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Thông báo người dùng
-// Route::get('/notifications', function () {
-//     return view('user.notifications', ['notifications' => auth()->user()->notifications]);
-// })->middleware('auth');
-Route::get('/admin/posts/pending', [PostController::class, 'pending']);
-
 // Route quản lý bài viết người dùng (CRUD cơ bản)
 Route::resource('posts', PostController::class)->middleware('auth');
 Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 Route::post('/posts/{id}/share', [PostController::class, 'share'])->name('posts.share')->middleware('auth');
 
-// Các route dành cho Admin
-Route::prefix('admin/posts')->name('admin.posts.')->middleware('auth')->group(function () {
-    Route::get('/pending', [AdminPostController::class, 'pending'])->name('pending');
-    Route::get('/{id}', [AdminPostController::class, 'show'])->name('show');
-    Route::post('/{id}/approve', [AdminPostController::class, 'approve'])->name('approve');
-    Route::post('/{id}/reject', [AdminPostController::class, 'reject'])->name('reject');
-    Route::post('/{id}/request-edit', [AdminPostController::class, 'requestEdit'])->name('requestEdit');
-    Route::delete('/{id}', [AdminPostController::class, 'destroy'])->name('destroy');
-});
-
-Route::get('/admin/tuongtac', [InteractionController::class, 'index'])->name('admin.tuongtac');
-Route::get('/admin/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('admin.theodoiluotxem');
-Route::get('/admin/xuatdulieu', function () {return view('admin.xuatdulieu');})->name('admin.xuatdulieu');
-Route::get('/admin/baocaohieusuat', function () {return view('admin.baocaohieusuat');})->name('admin.baocaohieusuat');
-Route::get('/admin/guithongbao', function () {return view('admin.guithongbao');})->name('admin.guithongbao');
+// Route cho bình luận (dành cho user)
+Route::post('/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');

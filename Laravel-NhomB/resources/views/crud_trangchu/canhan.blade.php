@@ -51,6 +51,28 @@
     </style>
 </head>
 <body data-current-user-id="{{ Auth::id() }}" data-profile-user-id="{{ $user->id }}">
+    @if(session('success'))
+        <div id="toast-success" style="position:fixed;top:24px;right:24px;z-index:9999;background:#28a745;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
+            {{ session('success') }}
+        </div>
+        <script>setTimeout(()=>{var t=document.getElementById('toast-success');if(t)t.style.display='none';},3000);</script>
+    @endif
+    @if(session('error'))
+        <div id="toast-error" style="position:fixed;top:24px;right:24px;z-index:9999;background:#dc3545;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
+            {{ session('error') }}
+        </div>
+        <script>setTimeout(()=>{var t=document.getElementById('toast-error');if(t)t.style.display='none';},3000);</script>
+    @endif
+    <!-- Bell notification -->
+    <div id="bell-notification" style="position:fixed;top:70px;right:24px;z-index:10000;">
+        <div style="position:relative;">
+            <i class="fas fa-bell" id="bell-icon" style="font-size:2rem;color:#1877f2;cursor:pointer;"></i>
+            <span id="bell-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#dc3545;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.9em;font-weight:bold;">1</span>
+        </div>
+        <div id="bell-dropdown" style="display:none;position:absolute;right:0;top:36px;background:#fff;min-width:260px;box-shadow:0 2px 12px rgba(0,0,0,0.12);border-radius:8px;overflow:hidden;">
+            <div id="bell-list"></div>
+        </div>
+    </div>
     <nav class="navbar">
         <div class="navbar-left">
             <a href="/trangchu" class="navbar-brand">Fite</a>
@@ -66,6 +88,7 @@
             </form>
         </div>
     </nav>
+
     <div id="logoutModal" class="modal">
         <div class="modal-content">
             <h2>Xác nhận đăng xuất</h2>
@@ -79,7 +102,7 @@
     <div class="profile-container">
         <div class="profile-header">
             <div class="profile-avatar-status">
-                <img src="{{ $user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="profile-avatar">
+                <img src="{{ asset(Auth::user()->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">
                 <span class="profile-status online"></span>
             </div>
             <div class="profile-info">
@@ -100,7 +123,7 @@
                 @forelse($posts as $post)
                     <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                         <div class="post-header">
-                            <img src="{{ $user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
+                            <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                             <div class="post-info">
                                 <h3>{{ $user->full_name ?? $user->username }}</h3>
                                 <span>{{ $post->created_at->diffForHumans() }}</span>
@@ -113,6 +136,9 @@
                         <div class="post-body">
                             <h4>{{ $post->title }}</h4>
                             <p>{{ $post->content }}</p>
+                            @if($post->status === 'canceled' && $post->admin_note)
+                                <div style="color:#dc3545;font-weight:500;margin-top:6px;">Lý do hủy: {{ $post->admin_note }}</div>
+                            @endif
                             @if($post->media->isNotEmpty())
                                 @foreach($post->media as $media)
                                     @if(str_contains($media->file_url, '.mp4'))
@@ -182,6 +208,31 @@
             </form>
         </div>
     </div>
+    <!-- Modal đặt lịch hàng loạt -->
+    <div id="bulkScheduleModal" class="modal" style="display:none;z-index:99999;">
+        <div class="modal-content" style="width:500px;max-width:95vw;">
+            <h2>Đặt lịch đăng bài hàng loạt</h2>
+            <form id="bulk-schedule-form" method="POST" action="/canhan/schedule-multi">
+                @csrf
+                <table style="width:100%;margin-bottom:12px;">
+                    <thead><tr><th></th><th>Tiêu đề</th><th>Thời gian đăng</th></tr></thead>
+                    <tbody>
+                        @foreach($posts->whereIn('status', ['bản nháp','pending']) as $post)
+                        <tr>
+                            <td><input type="checkbox" name="post_ids[]" value="{{ $post->id }}"></td>
+                            <td>{{ $post->title }}</td>
+                            <td><input type="datetime-local" name="scheduled_at[{{ $post->id }}]"></td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button confirm-button">Lên lịch</button>
+                    <button type="button" class="modal-button cancel-button" onclick="hideBulkScheduleModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="{{ asset('js/canhan.js') }}"></script>
     {{-- <script src="{{ asset('js/trangchu.js') }}"></script> --}}
     <script>
@@ -191,6 +242,67 @@
     console.log('editPost:', typeof window.editPost);
     console.log('deletePost:', typeof window.deletePost);
     console.log('togglePostMenu:', typeof window.togglePostMenu);
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.schedule-tab');
+        const contents = document.querySelectorAll('.schedule-content');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                contents.forEach(content => {
+                    if (content.id === tabName + '-posts') {
+                        content.style.display = 'block';
+                    } else {
+                        content.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+    </script>
+    <script>
+    function showBulkScheduleModal() {
+        document.getElementById('bulkScheduleModal').style.display = 'flex';
+    }
+    function hideBulkScheduleModal() {
+        document.getElementById('bulkScheduleModal').style.display = 'none';
+    }
+    </script>
+    <script>
+    // Bell notification logic
+    let bellNoti = [];
+    @if(session('success'))
+        bellNoti.push({type:'success',msg:`{{ session('success') }}`});
+    @endif
+    @if(session('error'))
+        bellNoti.push({type:'error',msg:`{{ session('error') }}`});
+    @endif
+    function renderBellList() {
+        const list = document.getElementById('bell-list');
+        if (!bellNoti.length) {
+            list.innerHTML = '<div style="padding:16px;color:#888;">Không có thông báo mới</div>';
+        } else {
+            list.innerHTML = bellNoti.map(n => `<div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;color:${n.type==='success'?'#28a745':'#dc3545'};font-weight:500;">${n.msg}</div>`).join('');
+        }
+        document.getElementById('bell-badge').style.display = bellNoti.length ? 'block' : 'none';
+        document.getElementById('bell-badge').textContent = bellNoti.length;
+    }
+    document.getElementById('bell-icon').onclick = function() {
+        const dropdown = document.getElementById('bell-dropdown');
+        dropdown.style.display = dropdown.style.display==='block' ? 'none' : 'block';
+        renderBellList();
+    };
+    // Ẩn dropdown khi click ngoài
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('bell-notification').contains(e.target)) {
+            document.getElementById('bell-dropdown').style.display = 'none';
+        }
+    });
+    // Hiển thị badge nếu có noti
+    renderBellList();
     </script>
 </body>
 </html>

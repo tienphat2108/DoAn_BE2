@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminCommentController extends Controller
 {
@@ -14,21 +15,31 @@ class AdminCommentController extends Controller
         $query = Comment::with(['user', 'post']);
 
         // Lọc theo bài viết nếu có
-        if ($request->has('post_id') && $request->post_id != 'all') {
+        if ($request->filled('post_id') && $request->post_id != 'all') {
             $query->where('post_id', $request->post_id);
         }
 
         // Lọc theo người dùng nếu có
-        if ($request->has('user_id') && $request->user_id != 'all') {
+        if ($request->filled('user_id') && $request->user_id != 'all') {
             $query->where('user_id', $request->user_id);
         }
 
         // Tìm kiếm theo nội dung
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->filled('search')) {
             $query->where('content', 'like', '%' . $request->search . '%');
         }
 
+        // Log câu truy vấn SQL cuối cùng (chỉ trong môi trường debug)
+        if (config('app.debug')) {
+            DB::listen(function ($sql) {
+                \Illuminate\Support\Facades\Log::info('AdminCommentController Query: ' . $sql->sql, $sql->bindings);
+            });
+        }
+
         $comments = $query->orderBy('created_at', 'desc')->get();
+        // Log số lượng bình luận được lấy
+        \Illuminate\Support\Facades\Log::info('AdminCommentController fetching comments. Count: ' . $comments->count());
+
         $posts = Post::all();
         $users = User::all();
 
@@ -63,14 +74,9 @@ class AdminCommentController extends Controller
     {
         try {
             $comment = Comment::findOrFail($id);
-            
-            $request->validate([
-                'content' => 'required|string|max:1000'
-            ]);
-
             $comment->content = $request->content;
             $comment->save();
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Bình luận đã được cập nhật thành công'

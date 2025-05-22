@@ -33,6 +33,29 @@
             padding: 5px;
             margin-bottom: 5px;
         }
+        .edit-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .edit-btn:hover {
+            background-color: #218838;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -55,7 +78,7 @@
                     <li><a href="{{ route('admin.baichoduyet') }}">BÀI CHỜ DUYỆT</a></li>
                     <li><a href="{{ route('admin.baidaduyet') }}">BÀI ĐÃ DUYỆT</a></li>
                     <li><a href="{{ route('admin.lichdangbai') }}">LỊCH ĐĂNG BÀI</a></li>
-                    <li><a href="{{ route('admin.phantichtruycap') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
+                    <li><a href="{{ route('admin.quanlybinhluan') }}">PHÂN TÍCH TƯƠNG TÁC</a></li>
                     <li><a href="#" onclick="showLogoutModal()">ĐĂNG XUẤT</a></li>
                 </ul>
             </div>
@@ -63,7 +86,7 @@
             <div class="admin-main">
                 <div class="interaction-actions" style="margin-bottom: 24px;">
                     <a href="{{ route('admin.quanlybinhluan') }}"><button class="interaction-btn selected">QUẢN LÝ BÌNH LUẬN</button></a>
-                    <a href="{{ route('admin.tuongtac') }}"><button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button></a>
+                    <a href="{{ route('admin.quanlytuongtac') }}"><button class="interaction-btn">QUẢN LÝ TƯƠNG TÁC</button></a>
                     <a href="{{ route('admin.theodoiluotxem') }}"><button class="interaction-btn">THEO DÕI LƯỢT XEM</button></a>
                     <a href="{{ route('admin.xuatdulieu') }}"><button class="interaction-btn">XUẤT DỮ LIỆU</button></a>
                     <a href="{{ route('admin.baocaohieusuat') }}"><button class="interaction-btn">BÁO CÁO</button></a>
@@ -88,18 +111,12 @@
                 </div>
                 <div class="comment-list">
                     @forelse($comments as $comment)
-                        <div class="comment-item" id="comment-{{ $comment->id }}">
+                        <div class="comment-item" id="comment-{{ $comment->comment_id }}">
                             <div class="comment-content">
                                 <b>{{ $comment->user->name }}:</b> <span class="comment-text">{{ $comment->content }}</span>
-                                <div class="edit-form">
-                                    <input type="text" class="edit-input" value="{{ $comment->content }}">
-                                    <button onclick="updateComment({{ $comment->id }}, this.parentElement)">Lưu</button>
-                                    <button onclick="cancelEdit(this.parentElement)">Hủy</button>
-                                </div>
                             </div>
                             <div class="comment-actions">
-                                <button onclick="showEditForm({{ $comment->id }})">Sửa</button>
-                                <button onclick="deleteComment({{ $comment->id }})">Xóa</button>
+                                <button onclick="deleteComment({{ $comment->comment_id }})" class="delete-btn">Xóa</button>
                             </div>
                         </div>
                     @empty
@@ -110,57 +127,25 @@
         </div>
     </div>
 
+    {{-- Logout Modal --}}
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <h2>Xác nhận đăng xuất</h2>
+            <p>Bạn có chắc chắn muốn đăng xuất không?</p>
+            <div class="modal-buttons">
+                <button class="modal-button confirm-button" onclick="confirmLogout()">Đăng xuất</button>
+                <button class="modal-button cancel-button" onclick="hideLogoutModal()">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
+
     <script>
         // Lấy CSRF token từ meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        // Hàm hiển thị form sửa bình luận
-        function showEditForm(commentId) {
-            const commentItem = document.querySelector(`#comment-${commentId}`);
-            const editForm = commentItem.querySelector('.edit-form');
-            const commentText = commentItem.querySelector('.comment-text');
-            
-            editForm.style.display = 'block';
-            commentText.style.display = 'none';
-        }
-
-        // Hàm hủy sửa bình luận
-        function cancelEdit(editForm) {
-            const commentText = editForm.parentElement.querySelector('.comment-text');
-            editForm.style.display = 'none';
-            commentText.style.display = 'inline';
-        }
-
-        // Hàm cập nhật bình luận
-        function updateComment(commentId, editForm) {
-            const newContent = editForm.querySelector('.edit-input').value;
-            
-            fetch(`/admin/comments/${commentId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    content: newContent
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const commentItem = document.querySelector(`#comment-${commentId}`);
-                    const commentText = commentItem.querySelector('.comment-text');
-                    commentText.textContent = newContent;
-                    cancelEdit(editForm);
-                } else {
-                    alert('Có lỗi xảy ra khi cập nhật bình luận');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi cập nhật bình luận');
-            });
-        }
 
         // Hàm xóa bình luận
         function deleteComment(commentId) {
@@ -232,6 +217,27 @@
                 searchComments();
             }
         });
+
+        //quanlybainguoidung.blade.php đăng xuất
+        function showLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            document.getElementById('logout-form').submit();
+        }
+
+        // Đóng modal khi click ra ngoài
+        window.onclick = function(event) {
+            var modal = document.getElementById('logoutModal');
+            if (event.target == modal) {
+                hideLogoutModal();
+            }
+        }
     </script>
 </body>
 </html>

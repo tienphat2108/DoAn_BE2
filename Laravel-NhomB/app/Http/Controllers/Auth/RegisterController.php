@@ -38,6 +38,7 @@ class RegisterController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'is_admin' => false, // Đảm bảo người dùng mới đăng ký không phải là admin
+            'avatar_url' => '/images/default-avatar.png', // Đặt avatar mặc định
         ]);
     }
 
