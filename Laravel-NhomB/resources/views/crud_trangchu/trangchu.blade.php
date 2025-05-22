@@ -713,6 +713,18 @@
 
     function handlePostTypeChange(type) {
         const scheduleDiv = document.getElementById('scheduled-time-display');
+        const statusInput = document.querySelector('input[name="status"]');
+
+        if (statusInput) {
+            if (type === 'now') {
+                statusInput.value = 'pending';
+            } else if (type === 'scheduled') {
+                statusInput.value = 'scheduled';
+            } else if (type === 'urgent') {
+                statusInput.value = 'urgent';
+            }
+        }
+
         if (type === 'scheduled' && scheduleDiv.textContent !== '') {
             scheduleDiv.style.display = 'block';
         } else {

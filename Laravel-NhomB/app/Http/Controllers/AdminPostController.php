@@ -91,4 +91,11 @@ class AdminPostController extends Controller
     return view('admin.posts.show', compact('post'));
 }
 
+    public function index()
+    {
+        $posts = Post::orderBy('created_at', 'desc')->with(['user', 'media'])->get();
+        return view('admin.quanlybainguongudung', compact('posts'));
+    }
+
+    public function store(Request $request)
 }

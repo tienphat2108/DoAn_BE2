@@ -74,28 +74,28 @@
                                 </td>
                                 <td>{{ $post->title }}</td>
                                 <td>
-                                    @if($post->status == 'pending')
-                                        Yêu cầu duyệt
+                                    @if($post->status == 'request')
+                                        Chờ duyệt sơ bộ
+                                    @elseif($post->status == 'pending')
+                                        Chờ duyệt chính thức
                                     @elseif($post->status == 'approved')
                                         Đã duyệt
                                     @elseif($post->status == 'bản nháp' || $post->status == 'draft')
                                         Bản nháp
+                                    @elseif($post->status == 'bị từ chối')
+                                        Bị từ chối
+                                    @elseif($post->status == 'canceled')
+                                        Đã hủy
                                     @else
                                         {{ $post->status }}
                                     @endif
                                 </td>
                                 <td>{{ $post->created_at->format('d/m/Y') }}</td>
                                 <td class="action-cell">
-                                    @if($post->status == 'pending')
-                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;" onsubmit="return confirm('Bạn có chắc chắn muốn duyệt bài viết này không?');">
+                                    @if($post->status == 'request')
+                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display: inline-block;">
                                             @csrf
                                             <button type="submit" class="btn-approve">Duyệt</button>
-                                        </form>
-                                    @elseif($post->status == 'bản nháp' || $post->status == 'draft')
-                                        <form action="{{ route('admin.posts.moveToPending', $post->id) }}" method="POST" style="display: inline-block;">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" class="btn-approve">Chờ duyệt</button>
                                         </form>
                                     @endif
                                     <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display: inline-block; margin-left: 16px;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
