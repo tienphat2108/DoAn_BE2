@@ -286,9 +286,17 @@
                     <!-- Phần bình luận -->
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
-                            <div class="comment" id="comment-{{ $comment->id }}">
+                            <div class="comment" id="comment-{{ $comment->comment_id }}">
                                 <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
-                                <p>{{ $comment->content }}</p>
+                                <p class="comment-content">{{ $comment->content }}</p>
+                                @if(Auth::id() === $comment->user_id)
+                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
+                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                    </form>
+                                @endif
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                         @endforeach
@@ -370,9 +378,17 @@
                     <!-- Phần bình luận -->
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
-                            <div class="comment" id="comment-{{ $comment->id }}">
+                            <div class="comment" id="comment-{{ $comment->comment_id }}">
                                 <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
-                                <p>{{ $comment->content }}</p>
+                                <p class="comment-content">{{ $comment->content }}</p>
+                                @if(Auth::id() === $comment->user_id)
+                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
+                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                    </form>
+                                @endif
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                         @endforeach
@@ -731,6 +747,43 @@
     });
     // Hiển thị badge nếu có noti
     renderBellList();
+
+    function showEditCommentForm(commentId) {
+        document.getElementById('edit-comment-form-' + commentId).style.display = 'inline-block';
+        document.querySelector('#comment-' + commentId + ' .comment-content').style.display = 'none';
+    }
+    function cancelEditComment(commentId) {
+        document.getElementById('edit-comment-form-' + commentId).style.display = 'none';
+        document.querySelector('#comment-' + commentId + ' .comment-content').style.display = 'block';
+    }
+    function submitEditComment(commentId, btn) {
+        var form = document.getElementById('edit-comment-form-' + commentId);
+        var input = form.querySelector('.edit-comment-input');
+        var newContent = input.value.trim();
+        if (!newContent) { alert('Nội dung không được để trống!'); return; }
+        fetch('/comments/' + commentId, {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ content: newContent })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('#comment-' + commentId + ' .comment-content').textContent = newContent;
+                cancelEditComment(commentId);
+            } else {
+                alert('Có lỗi khi cập nhật bình luận!');
+            }
+        })
+        .catch(err => {
+            alert('Có lỗi khi cập nhật bình luận!');
+            console.error(err);
+        });
+    }
     </script>
 </body>
 </html>
