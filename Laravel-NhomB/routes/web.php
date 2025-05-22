@@ -65,12 +65,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/quanlybainguoidung/{post}', [AdminPostController::class, 'destroy'])->name('deletePost');
     
     // Quản lý bài viết chờ duyệt
-    Route::get('/pending-posts', [PostApprovalController::class, 'index'])->name('pending-posts');
-    Route::post('/posts/{post}/approve', [PostApprovalController::class, 'approve'])->name('posts.approve');
-    Route::post('/posts/{post}/reject', [PostApprovalController::class, 'reject'])->name('posts.reject');
+    Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
+    Route::get('/posts/{post}', [AdminPostController::class, 'show'])->name('posts.show');
+    Route::post('/posts/{post}/approve', [AdminPostController::class, 'approve'])->name('posts.approve');
+    Route::post('/posts/{post}/reject', [AdminPostController::class, 'reject'])->name('posts.reject');
     
     // Các trang khác
-    Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
     Route::get('/lichdangbai', [AdminPostController::class, 'postSchedule'])->name('lichdangbai');
     Route::get('/phantichtruycap', [AnalyticsController::class, 'index'])->name('phantichtruycap');
