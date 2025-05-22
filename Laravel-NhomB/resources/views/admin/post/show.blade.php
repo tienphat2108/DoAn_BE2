@@ -20,7 +20,7 @@
 
         @if ($post->image)
             <p><strong>Hình ảnh:</strong></p>
-            <img src="{{ asset('uploads/' . $post->image) }}" alt="Hình ảnh bài viết" width="300">
+            <img src="{{ asset('storage/' . $post->image) }}" alt="Hình ảnh bài viết" width="300">
         @endif
 
         <br><br>

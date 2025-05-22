@@ -181,17 +181,28 @@
                                 <th>Lượt Thích</th>
                                 <th>Bình Luận</th>
                                 <th>Chia Sẻ</th>
+                                <th>Trạng Thái</th>
+                                <th>Hành Động</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($posts as $post)
                             <tr>
                                 <td>{{ $post->title }}</td>
-                                <td>{{ $post->user->name }}</td>
+                                <td>{{ $post->user->name ?? 'Không xác định' }}</td>
                                 <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                 <td>{{ $post->likes_count }}</td>
                                 <td>{{ $post->comments_count }}</td>
                                 <td>{{ $post->shares_count }}</td>
+                                <td>{{ $post->status }}</td>
+                                <td>
+                                    @if($post->status == 'request')
+                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="btn-approve">Duyệt</button>
+                                        </form>
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
