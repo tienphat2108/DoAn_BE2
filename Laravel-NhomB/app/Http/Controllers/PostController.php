@@ -91,7 +91,7 @@ class PostController extends Controller
         $post = Post::create([
             'title' => $request->title,
             'user_id' => $user->id,
-            'status' => 'pending',
+            'status' => $request->filled('scheduled_at') ? 'scheduled' : 'pending',
             'content' => $request->content,
             'scheduled_at' => $request->scheduled_at,
         ]);
