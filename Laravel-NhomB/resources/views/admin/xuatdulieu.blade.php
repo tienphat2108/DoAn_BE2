@@ -46,24 +46,32 @@
                     <div style="margin-bottom: 24px;">
                         <label for="data-type" style="font-weight: bold; display: block; margin-bottom: 8px;">Chọn loại dữ liệu:</label>
                         <select id="data-type" class="interaction-select" style="width: 100%;">
-                            <option>Lượt thích</option>
-                            <option>Lượt xem</option>
-                            <option>Bình luận</option>
-                            <option>Chia sẻ</option>
+                            <option value="posts">Bài viết</option>
+                            <option value="users">Người dùng</option>
                         </select>
                     </div>
                     <div style="margin-bottom: 24px;">
                         <label for="format-type" style="font-weight: bold; display: block; margin-bottom: 8px;">Chọn định dạng:</label>
                         <select id="format-type" class="interaction-select" style="width: 100%;">
-                            <option>PDF</option>
-                            <option>Excel</option>
+                            <option value="xlsx">Excel</option>
+                            <option value="csv">CSV</option>
                         </select>
                     </div>
-                    <button type="submit" class="interaction-filter-btn" style="width: 100%; background: #ccc; color: #222;">Xuất Dữ Liệu</button>
+                    <button type="button" onclick="handleExport()" class="interaction-filter-btn" style="width: 100%; background: #1877f2; color: #fff; ">Xuất Dữ Liệu</button>
                 </form>
+                {{-- <p>Chức năng xuất dữ liệu hiện đang tạm dừng hoạt động.</p> --}}
             </div>
         </div>
     </div>
     <!-- Logout Modal và script giữ nguyên như file quanlytuongtac.blade.php -->
+    <script>
+        function handleExport() {
+            const dataType = document.getElementById('data-type').value;
+            const formatType = document.getElementById('format-type').value;
+            // Xây dựng URL dựa trên lựa chọn
+            const exportUrl = `{{ route('admin.xuatdulieu.export') }}?type=${dataType}&format=${formatType}`;
+            window.location.href = exportUrl;
+        }
+    </script>
 </body>
 </html> 

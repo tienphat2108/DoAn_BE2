@@ -10,6 +10,9 @@ class Comment extends Model
     use HasFactory;
 
     protected $table = 'post_comments';
+    protected $primaryKey = 'comment_id';
+    public $incrementing = true;
+    public $keyType = 'int';
 
     protected $fillable = [
         'user_id',

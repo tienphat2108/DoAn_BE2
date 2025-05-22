@@ -62,8 +62,7 @@ class AdminCommentController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra khi xóa bình luận',
-                'error' => $e->getMessage()
+                'message' => 'Có lỗi xảy ra khi xóa bình luận'
             ], 500);
         }
     }
@@ -75,14 +74,9 @@ class AdminCommentController extends Controller
     {
         try {
             $comment = Comment::findOrFail($id);
-            
-            $request->validate([
-                'content' => 'required|string|max:1000'
-            ]);
-
             $comment->content = $request->content;
             $comment->save();
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Bình luận đã được cập nhật thành công'
