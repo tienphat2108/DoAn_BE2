@@ -209,7 +209,7 @@
                     <div class="post-header">
                         <img src="{{ $post->user->avatar_url ?? '/images/default-avatar.png' }}" alt="Avatar" class="avatar">
                         <div class="post-info">
-                            <h3>{{ $post->user->full_name ?? $post->user->username }}</h3>
+                            <h3>{{ $post->user->full_name ?? $post->user->username ?? 'Không xác định' }}</h3>
                             <span>
                                 {{ $post->created_at->diffForHumans() }}
                                 @if($post->latitude && $post->longitude)
@@ -269,17 +269,13 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->id }}">
-                                <strong>{{ $comment->user->full_name ?? $comment->user->username }}</strong>
+                                <strong>{{ $comment->user->full_name ?? $comment->user->username ?? 'Không xác định' }}</strong>
                                 <p>{{ $comment->content }}</p>
                                 <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                         @endforeach
                         @if(Auth::check())
-<<<<<<< HEAD
                             <form class="comment-form" action="{{ route('comments.store') }}" method="POST" style="margin-top: 8px;">
-=======
-                            <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
->>>>>>> origin/master
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->id }}">
                                 <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>

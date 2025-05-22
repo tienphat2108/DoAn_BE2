@@ -67,6 +67,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/posts/{post}/approve', [PostApprovalController::class, 'approve'])->name('posts.approve');
     Route::post('/posts/{post}/reject', [PostApprovalController::class, 'reject'])->name('posts.reject');
     
+    // Quản lý bình luận
+    Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
+    
+    // Tương tác
+    Route::get('/tuongtac', [InteractionController::class, 'index'])->name('tuongtac');
+    
+    // Theo dõi lượt xem
+    Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
+    
+    // Xuất dữ liệu
+    Route::get('/xuatdulieu', [AnalyticsController::class, 'exportData'])->name('xuatdulieu');
+    
+    // Báo cáo hiệu suất
+    Route::get('/baocaohieusuat', [AnalyticsController::class, 'performanceReport'])->name('baocaohieusuat');
+    
+    // Gửi thông báo
+    Route::get('/guithongbao', [AnalyticsController::class, 'sendNotification'])->name('guithongbao');
+    
     // Các trang khác
     Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
