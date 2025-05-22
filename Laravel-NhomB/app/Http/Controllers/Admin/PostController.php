@@ -19,6 +19,7 @@ class PostController extends Controller
     {
         $post         = Post::findOrFail($id);
         $post->status = 'approved'; // ✅ Đăng bài lên hệ thống
+        $post->approved_at = now();
         $post->save();
 
         // Ghi lại lịch sử duyệt bài
