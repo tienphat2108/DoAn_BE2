@@ -98,4 +98,22 @@ class AdminPostController extends Controller
     }
 
     public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'status' => 'required|string',
+            'scheduled_at' => 'nullable|date'
+        ]);
+
+        $post = new Post();
+        $post->title = $request->title;
+        $post->content = $request->content;
+        $post->status = $request->status;
+        $post->scheduled_at = $request->scheduled_at;
+        $post->user_id = auth()->id();
+        $post->save();
+
+        return redirect()->back()->with('success', 'Bài viết đã được tạo thành công.');
+    }
 }

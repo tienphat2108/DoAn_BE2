@@ -89,30 +89,27 @@ class PostController extends Controller
             return back()->withErrors($errors)->withInput();
         }
 
-        // Determine post status based on scheduled_at
-        $status = $request->filled('scheduled_at') ? 'scheduled' : $request->input('status', 'pending');
+        // Tạo bài viết mới
+        $post = new Post();
+        $post->user_id = $user->id;
+        $post->title = $request->title;
+        $post->content = $request->content;
+        $post->status = $request->filled('scheduled_at') ? 'scheduled' : 'pending';
+        $post->scheduled_at = $request->scheduled_at;
+        $post->save();
 
-        $post = Post::create([
-            'title' => $request->title,
-            'user_id' => $user->id,
-            'content' => $request->content,
-            'scheduled_at' => $request->scheduled_at,
-            'status' => $status,
-        ]);
-        // Log trạng thái bài viết sau khi tạo
-        \Illuminate\Support\Facades\Log::info('Post created with status: ' . $post->status . ' for post ID: ' . $post->id);
-        // Lưu media nếu có
+        // Xử lý upload media
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
-                $path = $file->store('media', 'public');
-                $type = $file->getClientMimeType();
-                Media::create([
-                    'post_id' => $post->id,
-                    'file_url' => $path,
-                    'file_type' => $type,
-                ]);
+                $path = $file->store('public/media');
+                $media = new Media();
+                $media->post_id = $post->id;
+                $media->file_url = str_replace('public/', '', $path);
+                $media->file_type = $file->getMimeType();
+                $media->save();
             }
         }
+
         // Ghi lịch sử đăng bài
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
