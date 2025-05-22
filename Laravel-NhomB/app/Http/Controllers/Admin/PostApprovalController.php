@@ -7,6 +7,7 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PostEditRequest;
+use Illuminate\Support\Facades\Log;
 
 class PostApprovalController extends Controller
 {
@@ -28,7 +29,10 @@ class PostApprovalController extends Controller
 
     public function approve(Post $post)
     {
-        $post->update(['status' => 'approved']);
+        $post->update([
+            'status' => 'approved',
+            'approved_at' => now()
+        ]);
         return redirect()->back()->with('success', 'Bài viết đã được duyệt thành công');
     }
 
@@ -63,5 +67,38 @@ class PostApprovalController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Yêu cầu chỉnh sửa đã được gửi đến người dùng');
+    }
+
+    public function getApprovalStats(Request $request)
+    {
+        $date = $request->input('date', now()->format('Y-m-d'));
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        Log::info('Ngày lọc: ' . $date);
+
+        // Thống kê theo ngày
+        $dailyStats = Post::where('status', 'approved')
+            ->whereDate('approved_at', $date)
+            ->count();
+
+        // Thống kê theo khoảng thời gian
+        $rangeStats = Post::where('status', 'approved')
+            ->whereBetween('approved_at', [$startDate, $endDate])
+            ->count();
+
+        // Thống kê chi tiết theo ngày trong khoảng thời gian
+        $detailedStats = Post::where('status', 'approved')
+            ->whereBetween('approved_at', [$startDate, $endDate])
+            ->selectRaw('DATE(approved_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->get();
+
+        return response()->json([
+            'date_input' => $date,
+            'daily_count' => $dailyStats,
+            'range_count' => $rangeStats,
+            'detailed_stats' => $detailedStats
+        ]);
     }
 } 

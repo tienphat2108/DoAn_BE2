@@ -33,11 +33,14 @@
             <div class="col-md-2 sidebar">
                 <h3 class="text-white text-center mb-4">Admin Panel</h3>
                 <nav>
-                    <a href="{{ route('admin.dashboard') }}">
+                    <a href="{{ route('admin.quanlybainguoidung') }}">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a>
                     <a href="{{ route('admin.pending-posts') }}">
                         <i class="fas fa-clock"></i> Bài viết chờ duyệt
+                    </a>
+                    <a href="{{ route('admin.thongkebaiduyet') }}">
+                        <i class="fas fa-chart-line"></i> Thống kê bài duyệt
                     </a>
                     <a href="{{ route('admin.baocaohieusuat') }}">
                         <i class="fas fa-chart-bar"></i> Báo cáo hiệu suất
