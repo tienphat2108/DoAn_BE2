@@ -19,7 +19,7 @@
                 <th>ID</th>
                 <th>Người đăng</th>
                 <th>Tiêu đề</th>
-                <th>Nội dung</th>
+{{--                <th>Nội dung</th>--}}
                 <th>Ngày đăng</th>
                 <th>Thao tác</th>
             </tr>
@@ -30,26 +30,24 @@
                 <td>{{ $post->id }}</td>
                 <td>{{ $post->user->name }}</td>
                 <td>{{ Str::limit($post->title, 50) }}</td>
-                <td>{{ Str::limit($post->content, 100) }}</td>
+{{--                                <td>{{ Str::limit($post->content, 100) }}</td>--}}
                 <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
-                <td>
-                    <div class="btn-group" role="group">
-                        <a href="{{ route('admin.posts.show', $post) }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-eye"></i> Xem chi tiết
-                        </a>
-                        <form action="{{ route('admin.posts.approve', $post) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="fas fa-check"></i> Duyệt
-                            </button>
-                        </form>
-                        <form action="{{ route('admin.posts.reject', $post) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-danger btn-sm">
-                                <i class="fas fa-times"></i> Từ chối
-                            </button>
-                        </form>
-                    </div>
+                <td class="action-cell">
+                    <a href="{{ route('admin.posts.show', $post) }}" class="btn btn-info btn-sm">
+                        <i class="fas fa-eye"></i> Xem chi tiết
+                    </a>
+                    <form action="{{ route('admin.posts.approve', $post) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn duyệt bài viết này không?');">
+                        @csrf
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i> Duyệt
+                        </button>
+                    </form>
+                    <form action="{{ route('admin.posts.reject', $post) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn từ chối bài viết này không?');">
+                        @csrf
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-times"></i> Từ chối
+                        </button>
+                    </form>
                 </td>
             </tr>
             @endforeach
