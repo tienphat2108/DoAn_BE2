@@ -88,16 +88,16 @@ class PostController extends Controller
         if (!empty($errors)) {
             return back()->withErrors($errors)->withInput();
         }
+
+        // Determine post status based on scheduled_at
+        $status = $request->filled('scheduled_at') ? 'scheduled' : $request->input('status', 'pending');
+
         $post = Post::create([
             'title' => $request->title,
             'user_id' => $user->id,
-<<<<<<< HEAD
-            'status' => 'request',
-=======
-            'status' => $request->filled('scheduled_at') ? 'scheduled' : 'pending',
->>>>>>> origin/master
             'content' => $request->content,
             'scheduled_at' => $request->scheduled_at,
+            'status' => $status,
         ]);
         // Log trạng thái bài viết sau khi tạo
         \Illuminate\Support\Facades\Log::info('Post created with status: ' . $post->status . ' for post ID: ' . $post->id);
@@ -310,5 +310,15 @@ class PostController extends Controller
             ]);
         }
         return response()->json(['success' => true, 'draft_id' => $post->id]);
+    }
+
+    public function postSchedule()
+    {
+        // Lấy tất cả bài viết cho tab 'All'
+        $allPosts = Post::orderBy('created_at', 'desc')->with(['user', 'media'])->get();
+        // Lấy bài viết đã lên lịch cho tab 'Lịch trình Đăng Bài'
+        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
+        $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->get();
+        return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories', 'allPosts'));
     }
 }
