@@ -22,4 +22,18 @@ class CommentController extends Controller
 
         return response()->json(['success' => true, 'id' => $comment->comment_id]);
     }
+
+    public function update(Request $request, $id)
+    {
+        $comment = PostComment::findOrFail($id);
+        if ($comment->user_id !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Không có quyền sửa bình luận này'], 403);
+        }
+        $request->validate([
+            'content' => 'required|string|max:1000',
+        ]);
+        $comment->content = $request->content;
+        $comment->save();
+        return response()->json(['success' => true]);
+    }
 }
