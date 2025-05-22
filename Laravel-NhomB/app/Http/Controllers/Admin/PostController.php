@@ -19,16 +19,16 @@ class PostController extends Controller
     public function approve($id)
     {
         $post = Post::findOrFail($id);
-        $post->status = 'approved';
+        $post->status = 'pending';
         $post->save();
-        // Ghi lịch sử duyệt bài viết
+        // Ghi lịch sử
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
             'user_id' => Auth::id(),
-            'action' => 'approve',
-            'details' => 'Bài viết đã được duyệt'
+            'action' => 'move_to_pending',
+            'details' => 'Bài viết được chuyển sang chờ duyệt bởi admin'
         ]);
-        return redirect()->back()->with('success', 'Bài viết đã được duyệt.');
+        return redirect()->back()->with('success', 'Bài viết đã được chuyển sang chờ duyệt.');
     }
 
     public function reject($id)
@@ -187,5 +187,11 @@ class PostController extends Controller
         } else {
             return redirect()->back()->with('error', 'Bài viết không ở trạng thái bản nháp.');
         }
+    }
+
+    public function show($id)
+    {
+        $post = \App\Models\Post::with(['user', 'media'])->findOrFail($id);
+        return view('admin.posts.show', compact('post'));
     }
 } 
