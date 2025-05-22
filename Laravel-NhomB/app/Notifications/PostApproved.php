@@ -3,15 +3,14 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class PostApproved extends Notification
 {
     use Queueable;
 
-    public $post;
+    protected $post;
 
     public function __construct($post)
     {
@@ -20,14 +19,27 @@ class PostApproved extends Notification
 
     public function via($notifiable)
     {
-        return ['database'];
+        return ['mail', 'database'];
     }
 
-    public function toDatabase($notifiable)
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Bài viết của bạn đã được duyệt')
+            ->greeting('Xin chào ' . $notifiable->name)
+            ->line('Bài viết "' . $this->post->title . '" của bạn đã được duyệt.')
+            ->line('Bạn có thể xem bài viết tại đây:')
+            ->action('Xem bài viết', url('/posts/' . $this->post->id))
+            ->line('Cảm ơn bạn đã đóng góp nội dung cho chúng tôi!');
+    }
+
+    public function toArray($notifiable)
     {
         return [
-            'message' => 'Bài viết "' . $this->post->title . '" đã được duyệt thành công.',
-            'post_id' => $this->post->id
+            'post_id' => $this->post->id,
+            'title' => $this->post->title,
+            'message' => 'Bài viết của bạn đã được duyệt',
+            'type' => 'post_approved'
         ];
     }
 }

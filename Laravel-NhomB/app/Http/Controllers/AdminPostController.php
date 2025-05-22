@@ -8,6 +8,7 @@ use App\Notifications\PostApproved;
 use App\Notifications\PostRejected;
 use App\Notifications\PostEditRequested;
 use App\Notifications\PostDeleted;
+use Illuminate\Notifications\Notifiable;
 
 
 class AdminPostController extends Controller
@@ -27,7 +28,12 @@ class AdminPostController extends Controller
         $post->admin_note = null;
         $post->save();
 
-        return redirect()->back()->with('success', 'Đã duyệt bài viết.');
+        // Gửi thông báo cho user
+        if ($post->user) {
+            $post->user->notify(new PostApproved($post));
+        }
+
+        return redirect()->back()->with('success', 'Đã duyệt bài viết và gửi thông báo cho người dùng.');
     }
 
     // 3. Từ chối bài viết
@@ -42,8 +48,9 @@ class AdminPostController extends Controller
         $post->admin_note = $request->note;
         $post->save();
     
+        // Gửi thông báo cho user
         if ($post->user) {
-            $post->user->notify(new PostRejected($request->note));
+            $post->user->notify(new PostRejected($post, $request->note));
         }
     
         return redirect()->back()->with('error', 'Bài viết đã bị từ chối và người dùng đã nhận được thông báo.');
