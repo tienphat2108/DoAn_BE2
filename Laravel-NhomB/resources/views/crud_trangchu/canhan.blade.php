@@ -89,51 +89,6 @@
         </div>
     </nav>
 
-    <!-- Lịch trình đăng bài: Đặt ngay sau navbar, trước profile-container -->
-    <div class="post-schedule-section" style="margin: 24px auto 0 auto; max-width: 700px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <h2 style="margin-bottom: 20px; font-size: 1.5em; color: #333;">Lịch trình đăng bài</h2>
-            <button class="btn btn-danger" style="padding:8px 18px;border-radius:6px;font-weight:500;" onclick="showBulkScheduleModal()">Đặt lịch hàng loạt</button>
-        </div>
-        <div class="schedule-tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button class="schedule-tab" data-tab="scheduled" style="padding: 10px 20px; border: none; background: #f0f0f0; border-radius: 4px; cursor: pointer;">Sắp đăng</button>
-            <button class="schedule-tab" data-tab="canceled" style="padding: 10px 20px; border: none; background: #f0f0f0; border-radius: 4px; cursor: pointer;">Đã hủy</button>
-            <button class="schedule-tab active" data-tab="pending" style="padding: 10px 20px; border: none; background: #f0f0f0; border-radius: 4px; cursor: pointer;">Chờ duyệt</button>
-        </div>
-        <div id="scheduled-posts" class="schedule-content" style="display: none;">
-            <h3>Sắp đăng</h3>
-            <ul>
-                @foreach($scheduledPosts as $post)
-                    <li style="margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px;">
-                        <strong>{{ $post->title }}</strong> - Đăng lúc: {{ $post->scheduled_at }}
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-        <div id="canceled-posts" class="schedule-content" style="display: none;">
-            <h3>Đã hủy</h3>
-            <ul>
-                @foreach($canceledPosts as $post)
-                    <li style="margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px;">
-                        <strong>{{ $post->title }}</strong> - Đã hủy lúc: {{ $post->updated_at }}
-                        @if($post->admin_note)
-                            <div style="color:#dc3545;font-weight:500;margin-top:4px;">Lý do: {{ $post->admin_note }}</div>
-                        @endif
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-        <div id="pending-posts" class="schedule-content" style="display: block;">
-            <h3>Chờ duyệt</h3>
-            <ul>
-                @foreach($pendingPosts as $post)
-                    <li style="margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px;">
-                        <strong>{{ $post->title }}</strong> - Đăng lúc: {{ $post->created_at }}
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-    </div>
     <div id="logoutModal" class="modal">
         <div class="modal-content">
             <h2>Xác nhận đăng xuất</h2>

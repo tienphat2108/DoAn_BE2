@@ -187,7 +187,7 @@
                             @foreach($posts as $post)
                             <tr>
                                 <td>{{ $post->title }}</td>
-                                <td>{{ $post->user->name }}</td>
+                                <td>{{ $post->user->name ?? 'Không xác định' }}</td>
                                 <td>{{ $post->created_at->format('d/m/Y H:i') }}</td>
                                 <td>{{ $post->likes_count }}</td>
                                 <td>{{ $post->comments_count }}</td>
