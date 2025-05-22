@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
 
 // Route bình luận cho user thường (phải đặt ngoài group admin)
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store')->middleware('auth');
+Route::put('/comments/{id}', [App\Http\Controllers\CommentController::class, 'update'])->name('comments.update')->middleware('auth');
 
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
