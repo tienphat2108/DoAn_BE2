@@ -249,7 +249,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
+                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -341,7 +341,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
+                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -802,6 +802,82 @@
         .catch(err => {
             alert('Có lỗi khi cập nhật bình luận!');
             console.error(err);
+        });
+    }
+
+    function showLogoutModal() {
+        document.getElementById('logoutModal').style.display = 'flex';
+    }
+
+    function hideLogoutModal() {
+        document.getElementById('logoutModal').style.display = 'none';
+    }
+
+    function confirmLogout() {
+        document.getElementById('logout-form').submit();
+    }
+
+    // Đóng modal khi click ra ngoài
+    window.onclick = function(event) {
+        var modal = document.getElementById('logoutModal');
+        if (event.target == modal) {
+            hideLogoutModal();
+        }
+    }
+
+    // Hàm xóa bài viết
+    function deletePost(postId) {
+        // Kiểm tra trạng thái bài viết trước khi xóa
+        fetch(`/posts/${postId}/check-status`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'deleted') {
+                alert('Lỗi vui lòng tải lại trang để cập nhật dữ liệu!');
+                // Xóa bài viết khỏi DOM nếu nó vẫn còn hiển thị
+                const postElement = document.getElementById(`post-${postId}`);
+                if (postElement) {
+                    postElement.remove();
+                }
+            } else {
+                // Nếu bài viết chưa bị xóa, hỏi xác nhận trước khi xóa
+                if (confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
+                    fetch(`/posts/${postId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Xóa bài viết khỏi DOM sau khi xóa thành công
+                            const postElement = document.getElementById(`post-${postId}`);
+                            if (postElement) {
+                                postElement.remove();
+                            }
+                        } else {
+                            // Hiển thị thông báo lỗi nếu xóa không thành công (ví dụ: quyền hạn)
+                            alert(data.message || 'Có lỗi xảy ra khi xóa bài viết!');
+                        }
+                    })
+                    .catch(error => {
+                        alert('Có lỗi xảy ra khi xóa bài viết!');
+                        console.error('Delete error:', error);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            // Xử lý lỗi khi gọi API check-status
+            alert('Có lỗi xảy ra khi kiểm tra trạng thái bài viết!');
+            console.error('Status check error:', error);
         });
     }
     </script>

@@ -210,18 +210,6 @@ function shareToEmail(postId) {
     console.log('Sharing via Email:', postId);
 }
 
-// XÓA BÀI VIẾT
-function deletePost(postId) {
-    if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
-        var form = document.getElementById('delete-form-' + postId);
-        if (form) {
-            form.submit();
-        } else {
-            alert('Không tìm thấy form xóa cho bài viết này!');
-        }
-    }
-}
-
 // CHỈNH SỬA BÀI VIẾT
 function editPost(postId) {
     var modal = document.getElementById('editPostModal');

@@ -318,4 +318,12 @@ class PostController extends Controller
         $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->get();
         return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories', 'allPosts'));
     }
+
+    public function checkStatus($id)
+    {
+        $post = Post::find($id);
+        return response()->json([
+            'status' => $post ? 'exists' : 'deleted'
+        ]);
+    }
 }
