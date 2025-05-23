@@ -104,6 +104,7 @@
                     <select id="userFilter" class="interaction-select">
                         <option value="all">Tất cả người dùng</option>
                         @foreach($users as $user)
+                            @continue(is_null($user))
                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                         @endforeach
                     </select>
@@ -113,7 +114,7 @@
                     @forelse($comments as $comment)
                         <div class="comment-item" id="comment-{{ $comment->comment_id }}">
                             <div class="comment-content">
-                                <b>{{ $comment->user->name }}:</b> <span class="comment-text">{{ $comment->content }}</span>
+                                <b>{{ $comment->user ? $comment->user->name : 'Người dùng không tồn tại' }}:</b> <span class="comment-text">{{ $comment->content }}</span>
                             </div>
                             <div class="comment-actions">
                                 <button onclick="deleteComment({{ $comment->comment_id }})" class="delete-btn">Xóa</button>

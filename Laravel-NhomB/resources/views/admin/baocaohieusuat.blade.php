@@ -6,6 +6,36 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Báo Cáo Hiệu Suất Hàng Tháng</title>
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <style>
+        .change-positive {
+            color: #28a745;
+        }
+        .change-negative {
+            color: #dc3545;
+        }
+        .interaction-filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+        .interaction-select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .interaction-filter-btn {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .interaction-filter-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container">
@@ -42,23 +72,19 @@
                     <a href="{{ route('admin.guithongbao') }}"><button class="interaction-btn">GỬI THÔNG BÁO</button></a>
                 </div>
                 <h2 class="interaction-title">Báo Cáo Hiệu Suất Hàng Tháng</h2>
-                <div class="interaction-filters" style="display: flex; gap: 12px; margin-bottom: 24px;">
-                    <select class="interaction-select">
-                        <option>Tháng 1</option>
-                        <option>Tháng 2</option>
-                        <option>Tháng 3</option>
-                        <option>Tháng 4</option>
-                        <option>Tháng 5</option>
-                        <option>Tháng 6</option>
-                        <option>Tháng 7</option>
-                        <option>Tháng 8</option>
-                        <option>Tháng 9</option>
-                        <option>Tháng 10</option>
-                        <option>Tháng 11</option>
-                        <option>Tháng 12</option>
+                <form action="{{ route('admin.baocaohieusuat') }}" method="GET" class="interaction-filters">
+                    <select name="month" class="interaction-select">
+                        @for($i = 1; $i <= 12; $i++)
+                            <option value="{{ $i }}" {{ $selectedMonth == $i ? 'selected' : '' }}>Tháng {{ $i }}</option>
+                        @endfor
                     </select>
-                    <button class="interaction-filter-btn">Xem Báo Cáo</button>
-                </div>
+                    <select name="year" class="interaction-select">
+                        @for($i = now()->year; $i >= now()->year - 2; $i--)
+                            <option value="{{ $i }}" {{ $selectedYear == $i ? 'selected' : '' }}>Năm {{ $i }}</option>
+                        @endfor
+                    </select>
+                    <button type="submit" class="interaction-filter-btn">Xem Báo Cáo</button>
+                </form>
                 <div class="interaction-table-wrapper">
                     <table class="interaction-table">
                         <thead>
@@ -72,21 +98,43 @@
                         <tbody>
                             <tr>
                                 <td>Lượt xem</td>
-                                <td>12,000</td>
-                                <td>10,000</td>
-                                <td>14%</td>
+                                <td>{{ number_format($stats['views']['current']) }}</td>
+                                <td>{{ number_format($stats['views']['previous']) }}</td>
+                                <td class="{{ $stats['views']['change'] >= 0 ? 'change-positive' : 'change-negative' }}">
+                                    {{ $stats['views']['change'] }}%
+                                </td>
                             </tr>
                             <tr>
                                 <td>Lượt thích</td>
-                                <td>5,500</td>
-                                <td>4,800</td>
-                                <td>14%</td>
+                                <td>{{ number_format($stats['likes']['current']) }}</td>
+                                <td>{{ number_format($stats['likes']['previous']) }}</td>
+                                <td class="{{ $stats['likes']['change'] >= 0 ? 'change-positive' : 'change-negative' }}">
+                                    {{ $stats['likes']['change'] }}%
+                                </td>
                             </tr>
                             <tr>
                                 <td>Lượt chia sẻ</td>
-                                <td>2,100</td>
-                                <td>2,000</td>
-                                <td>10%</td>
+                                <td>{{ number_format($stats['shares']['current']) }}</td>
+                                <td>{{ number_format($stats['shares']['previous']) }}</td>
+                                <td class="{{ $stats['shares']['change'] >= 0 ? 'change-positive' : 'change-negative' }}">
+                                    {{ $stats['shares']['change'] }}%
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Lượt bình luận</td>
+                                <td>{{ number_format($stats['comments']['current']) }}</td>
+                                <td>{{ number_format($stats['comments']['previous']) }}</td>
+                                <td class="{{ $stats['comments']['change'] >= 0 ? 'change-positive' : 'change-negative' }}">
+                                    {{ $stats['comments']['change'] }}%
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Người dùng mới</td>
+                                <td>{{ number_format($stats['users']['current']) }}</td>
+                                <td>{{ number_format($stats['users']['previous']) }}</td>
+                                <td class="{{ $stats['users']['change'] >= 0 ? 'change-positive' : 'change-negative' }}">
+                                    {{ $stats['users']['change'] }}%
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -94,6 +142,15 @@
             </div>
         </div>
     </div>
-    <!-- Logout Modal và script giữ nguyên như file quanlytuongtac.blade.php -->
+    <script>
+        function showLogoutModal() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                document.getElementById('logout-form').submit();
+            }
+        }
+    </script>
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
 </body>
 </html> 

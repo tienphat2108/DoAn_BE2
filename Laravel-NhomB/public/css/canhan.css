@@ -220,6 +220,15 @@ body {
     background: #1565c0;
 }
 
+/* Removed custom style for the Like button when not liked */
+
+/* Keep liked state style - adjust slightly to work with default button style */
+.post-actions button.like-btn.liked {
+    /* background: none; /* Ensure no blue background - remove this line */ */
+    color: #1877f2; /* Blue color for liked state */
+    border-color: #1877f2; /* Use border-color instead of border */
+}
+
 /* Modal overlay fix */
 .modal {
     display: none;

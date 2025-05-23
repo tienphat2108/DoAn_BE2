@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Trang cá nhân</title>
     <link rel="stylesheet" href="{{ asset('css/canhan.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -47,6 +48,27 @@
         }
         .post {
             position: relative;
+        }
+        .comment-body {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .comment-content {
+            margin: 0; /* Remove default paragraph margin */
+        }
+        .edit-comment-btn {
+            background: none;
+            border: 1px solid #007bff; /* Added border */
+            color: #007bff; /* Or a suitable color for edit button */
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 2px 6px; /* Added padding */
+            border-radius: 4px; /* Optional: add rounded corners */
+        }
+        .edit-comment-btn:hover {
+            text-decoration: underline;
+            background-color: rgba(0, 123, 255, 0.1); /* Optional: subtle background change on hover */
         }
     </style>
 </head>
@@ -152,10 +174,48 @@
                             @endif
                         </div>
                         <div class="post-actions">
-                            <button>Thích ({{ $post->likes->count() }})</button>
-                            <button>Bình luận ({{ $post->comments->count() }})</button>
+                            <button class="like-btn{{ $post->likes->contains('user_id', Auth::id()) ? ' liked' : '' }}" data-post-id="{{ $post->id }}" style="{{ $post->likes->contains('user_id', Auth::id()) ? 'color:#0056b3;' : '' }}">
+                                Thích (<span id="like-count-{{ $post->id }}">{{ $post->likes->count() }}</span>)
+                            </button>
+                            <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
+                                Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
+                            </button>
+                            <span class="view-count" style="margin-left: 10px; color: #888; font-size: 14px;">
+                                👁️ <span id="view-count-{{ $post->id }}">{{ $post->views->count() }}</span> lượt xem
+                            </span>
                         </div>
-                        <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;">
+                        <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
+                            @foreach($post->comments as $comment)
+                                <div class="comment" id="comment-{{ $comment->comment_id }}">
+                                    <div class="comment-header">
+                                        <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                        <span style="color: #888; font-size: 12px; margin-left: 8px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                    <div class="comment-body">
+                                        <p class="comment-content">{{ $comment->content }}</p>
+                                        @if(Auth::id() === $comment->user_id)
+                                            <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                        @endif
+                                    </div>
+                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
+                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                    </form>
+                                </div>
+                            @endforeach
+                            @if(Auth::check())
+                                <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
+                                    @csrf
+                                    <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                    <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>
+                                    <button type="submit">Gửi bình luận</button>
+                                </form>
+                            @else
+                                <p><a href="{{ route('login') }}">Đăng nhập</a> để bình luận.</p>
+                            @endif
+                        </div>
+                        <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
                             @csrf
                             @method('DELETE')
                         </form>
@@ -303,6 +363,263 @@
     });
     // Hiển thị badge nếu có noti
     renderBellList();
+    </script>
+    <script>
+    // Helper function to escape HTML
+    function escapeHTML(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // Toggle comment section display using event delegation
+    document.body.addEventListener('click', function(event) {
+        const target = event.target;
+        const toggleButton = target.closest('.post-actions .toggle-comments-btn');
+
+        if (toggleButton) {
+            const postId = toggleButton.getAttribute('data-post-id');
+            const commentsDiv = document.getElementById('comments-' + postId);
+
+            if (commentsDiv) {
+                if (commentsDiv.style.display === 'none' || commentsDiv.style.display === '') {
+                    commentsDiv.style.display = 'block';
+                } else {
+                    commentsDiv.style.display = 'none';
+                }
+            }
+        }
+    });
+
+    // Handle Like/Unlike using event delegation on the document body
+    document.body.addEventListener('click', function(event) {
+        // Check if the clicked element or its parent is a like button
+        const clickedButton = event.target.closest('.post-actions .like-btn');
+
+        if (clickedButton) {
+            console.log('Clicked like button:', clickedButton);
+            var postId = clickedButton.getAttribute('data-post-id');
+            var likeCountSpan = clickedButton.querySelector('span') || clickedButton; // Get the span or the button itself
+
+            // Ensure the span exists for updating count dynamically
+            if (!likeCountSpan || likeCountSpan === clickedButton) {
+                 var currentText = clickedButton.textContent;
+                var match = currentText.match(/\d+/);
+                var current = match ? parseInt(match[0]) : 0;
+                 clickedButton.innerHTML = 'Thích (<span id="like-count-' + postId + '">' + current + '</span>)';
+                 likeCountSpan = document.getElementById('like-count-' + postId);
+             }
+
+            var liked = clickedButton.classList.contains('liked');
+            var url = '/posts/' + postId + '/like';
+            var method = liked ? 'DELETE' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var current = parseInt(likeCountSpan.textContent);
+                    if (liked) {
+                        likeCountSpan.textContent = current > 0 ? current - 1 : 0;
+                        clickedButton.classList.remove('liked');
+                        clickedButton.style.color = ''; // Reset color
+                    } else {
+                        likeCountSpan.textContent = current + 1;
+                        clickedButton.classList.add('liked');
+                        clickedButton.style.color = '#0056b3'; // Set liked color
+                    }
+                } else {
+                    alert('Có lỗi khi thích bài viết!');
+                }
+            })
+            .catch(err => {
+                alert('Có lỗi khi thích bài viết!');
+                console.error('AJAX like error:', err);
+            });
+        }
+    });
+
+    // Handle submitting new comment via AJAX
+    document.querySelectorAll('form.comment-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var postId = form.querySelector('input[name="post_id"]').value;
+            var content = form.querySelector('textarea[name="content"]').value;
+            var countSpan = document.getElementById('comment-count-' + postId);
+            var commentsDiv = form.closest('.comments');
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    post_id: postId,
+                    content: content
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success || data.id) { // Check for success or presence of new comment ID
+                    // Update comment count
+                    if (countSpan) {
+                        var current = parseInt(countSpan.textContent);
+                        countSpan.textContent = current + 1;
+                    }
+
+                    // Create and append new comment HTML
+                    var newComment = document.createElement('div');
+                    newComment.className = 'comment';
+                    newComment.id = 'comment-' + data.id; // Assign ID returned from server
+
+                    // Build comment HTML dynamically
+                    var commentHtml =
+                        '<div class="comment-header">' +
+                            '<strong>Bạn</strong>' + // Assuming 'Bạn' for the current user who just commented
+                            '<span style="color: #888; font-size: 12px; margin-left: 8px;">Vừa xong</span>' +
+                        '</div>' +
+                        '<div class="comment-body">' +
+                            '<p class="comment-content">' + escapeHTML(content) + '</p>';
+
+                    // Add edit button (assuming the current user is the author since they just created it)
+                    commentHtml += '<button class="edit-comment-btn" onclick="showEditCommentForm(' + data.id + ')">Sửa</button>';
+
+                    commentHtml +=
+                        '</div>' +
+                        '<form class="edit-comment-form" id="edit-comment-form-' + data.id + '" style="display:none; margin-top:5px;">' +
+                            '<input type="text" class="edit-comment-input" value="' + escapeHTML(content) + '" style="width:70%;padding:3px;">' +
+                            '<button type="button" onclick="submitEditComment(' + data.id + ', this)">Lưu</button>' +
+                            '<button type="button" onclick="cancelEditComment(' + data.id + ')">Hủy</button>' +
+                        '</form>';
+
+                    newComment.innerHTML = commentHtml;
+
+                    // Insert the new comment before the form
+                    commentsDiv.insertBefore(newComment, form);
+
+                    // Clear the textarea
+                    form.querySelector('textarea[name="content"]').value = '';
+                } else {
+                    alert(data.message || 'Có lỗi khi gửi bình luận!');
+                }
+            })
+            .catch(err => {
+                alert('Có lỗi khi gửi bình luận!');
+                console.error('AJAX error:', err);
+            });
+        });
+    });
+
+    // Functions for editing comments
+    function showEditCommentForm(commentId) {
+        const commentElement = document.getElementById('comment-' + commentId);
+        if (!commentElement) return;
+
+        const commentContent = commentElement.querySelector('.comment-content');
+        const editForm = commentElement.querySelector('.edit-comment-form');
+        const editButton = commentElement.querySelector('.edit-comment-btn');
+
+        if (commentContent) commentContent.style.display = 'none';
+        if (editForm) editForm.style.display = 'inline-block';
+        if (editButton) editButton.style.display = 'none';
+    }
+
+    function cancelEditComment(commentId) {
+        const commentElement = document.getElementById('comment-' + commentId);
+        if (!commentElement) return;
+
+        const commentContent = commentElement.querySelector('.comment-content');
+        const editForm = commentElement.querySelector('.edit-comment-form');
+        const editButton = commentElement.querySelector('.edit-comment-btn');
+
+        if (commentContent) commentContent.style.display = 'block';
+        if (editForm) editForm.style.display = 'none';
+        if (editButton) editButton.style.display = 'inline-block';
+    }
+
+    function submitEditComment(commentId) {
+        const commentElement = document.getElementById('comment-' + commentId);
+        if (!commentElement) return;
+
+        const editForm = commentElement.querySelector('.edit-comment-form');
+        const input = editForm ? editForm.querySelector('.edit-comment-input') : null;
+        const newContent = input ? input.value.trim() : '';
+
+        if (!newContent) { alert('Nội dung không được để trống!'); return; }
+        if (!editForm) { console.error('Edit form not found for comment:', commentId); return; }
+
+        fetch('/comments/' + commentId, {
+            method: 'PUT', // Assuming PUT method for update
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ content: newContent })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const commentContentElement = commentElement.querySelector('.comment-content');
+                if(commentContentElement) commentContentElement.textContent = newContent;
+                cancelEditComment(commentId); // Hide form and show content+button
+            } else {
+                alert(data.message || 'Có lỗi khi cập nhật bình luận!');
+            }
+        })
+        .catch(err => {
+                alert('Có lỗi khi cập nhật bình luận!');
+                console.error(err);
+            });
+    }
+
+    // Use event delegation for comment edit/save/cancel buttons
+    document.body.addEventListener('click', function(event) {
+        const target = event.target;
+
+        // Handle Edit button click
+        if (target.classList.contains('edit-comment-btn')) {
+            const commentElement = target.closest('.comment');
+            if (commentElement) {
+                const commentId = commentElement.id.replace('comment-', '');
+                showEditCommentForm(commentId);
+            }
+        }
+
+        // Handle Save button click
+        if (target.tagName === 'BUTTON' && target.textContent.trim() === 'Lưu' && target.closest('.edit-comment-form')) {
+             const commentElement = target.closest('.comment');
+            if (commentElement) {
+                const commentId = commentElement.id.replace('comment-', '');
+                submitEditComment(commentId);
+            }
+        }
+
+        // Handle Cancel button click
+        if (target.tagName === 'BUTTON' && target.textContent.trim() === 'Hủy' && target.closest('.edit-comment-form')) {
+             const commentElement = target.closest('.comment');
+            if (commentElement) {
+                const commentId = commentElement.id.replace('comment-', '');
+                cancelEditComment(commentId);
+            }
+        }
+    });
+
+    // Other existing scripts (like modals, profile menu, etc.) should be outside or adjusted
+
     </script>
 </body>
 </html>

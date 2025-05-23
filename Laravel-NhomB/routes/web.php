@@ -66,9 +66,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/quanlybainguoidung/{post}', [AdminPostController::class, 'destroy'])->name('deletePost');
     
     // Quản lý bài viết chờ duyệt
-    Route::get('/pending-posts', [PostApprovalController::class, 'index'])->name('pending-posts');
-    Route::post('/posts/{post}/approve', [PostApprovalController::class, 'approve'])->name('posts.approve');
-    Route::post('/posts/{post}/reject', [PostApprovalController::class, 'reject'])->name('posts.reject');
+    Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
+    Route::get('/posts/{post}', [AdminPostController::class, 'show'])->name('posts.show');
+    Route::post('/posts/{post}/approve', [AdminPostController::class, 'approve'])->name('posts.approve');
+    Route::post('/posts/{post}/reject', [AdminPostController::class, 'reject'])->name('posts.reject');
     
     // Quản lý bình luận
     Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
@@ -94,7 +95,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/guithongbao', [AnalyticsController::class, 'sendNotification'])->name('guithongbao');
     
     // Các trang khác
-    Route::get('/baichoduyet', [AdminPostController::class, 'pendingPosts'])->name('baichoduyet');
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
     Route::get('/lichdangbai', [AdminPostController::class, 'postSchedule'])->name('lichdangbai');
     Route::get('/phantichtruycap', [AnalyticsController::class, 'index'])->name('phantichtruycap');
@@ -116,6 +116,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/guithongbao', function() {
         return view('admin.guithongbao');
     })->name('guithongbao');
+
+    // Trang thống kê số lượng bài duyệt
+    Route::get('/thongkebaiduyet', function() {
+        return view('admin.post-approval-stats');
+    })->name('thongkebaiduyet');
+
+    // API thống kê số lượng bài duyệt
+    Route::get('/api/post-approval-stats', [PostApprovalController::class, 'getApprovalStats'])->name('post-approval-stats');
 
     Route::post('/lichdangbai/schedule-multi', [App\Http\Controllers\Admin\PostController::class, 'scheduleMulti'])->name('scheduleMulti');
 
@@ -139,6 +147,7 @@ Route::get('/', function () {
 Route::resource('posts', PostController::class)->middleware('auth');
 Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 Route::post('/posts/{id}/share', [PostController::class, 'share'])->name('posts.share')->middleware('auth');
+Route::get('/posts/{id}/check-status', [PostController::class, 'checkStatus'])->name('posts.check-status')->middleware('auth');
 
 // Route cho bình luận (dành cho user)
 Route::post('/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');

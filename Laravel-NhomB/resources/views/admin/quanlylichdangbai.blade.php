@@ -125,7 +125,8 @@
 </head>
 <body>
     <script>
-        console.log('Scheduled Posts Data:', @json($scheduledPosts));
+        window.scheduledPosts = JSON.parse('{!! json_encode($scheduledPosts) !!}');
+        console.log('Scheduled Posts Data:', window.scheduledPosts);
     </script>
 
     <div class="admin-container">
@@ -221,7 +222,7 @@
                                 @forelse($allPosts as $post)
                                     <tr>
                                         <td>
-                                            @if($post->media->isNotEmpty() && str_contains($post->media->first()->file_type, 'image'))
+                                            @if($post->media && $post->media->isNotEmpty() && str_contains($post->media->first()->file_type, 'image'))
                                                 <img src="{{ asset('storage/' . $post->media->first()->file_url) }}" alt="Hình ảnh" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
                                             @else
                                                 <span>Không có</span>
@@ -296,9 +297,9 @@
                                         <td>{{ $post->status }}</td>
                                         <td>{{ $post->scheduled_at ? \Carbon\Carbon::parse($post->scheduled_at)->format('H:i:s d/m/Y') : '' }}</td>
                                         <td>
-                                            <button class="action-btn view-btn" onclick="viewPost({{ $post->id }})">Xem chi tiết</button>
-                                            <button class="action-btn cancel-btn" onclick="cancelSchedule({{ $post->id }})">Hủy lịch</button>
-                                            <button class="action-btn approve-btn" onclick="approvePost({{ $post->id }})">Cho phép đăng</button>
+                                            <button class="action-btn view-btn" onclick="viewPost('{{ $post->id }}')">Xem chi tiết</button>
+                                            <button class="action-btn cancel-btn" onclick="cancelSchedule('{{ $post->id }}')">Hủy lịch</button>
+                                            <button class="action-btn approve-btn" onclick="approvePost('{{ $post->id }}')">Cho phép đăng</button>
                                         </td>
                                     </tr>
                                 @empty
@@ -595,8 +596,6 @@
             currentDate.setMonth(currentDate.getMonth() + 1);
             updateCalendar();
         }
-        // Lấy dữ liệu bài đã lên lịch từ backend
-        const scheduledPosts = @json($scheduledPosts);
         // Render calendar
         function renderCalendar() {
             const year = currentDate.getFullYear();
@@ -746,13 +745,12 @@
             .catch(err => alert('Lỗi kết nối: ' + err.message));
         }
         // Thêm các hàm thao tác bài viết cho tab Lịch trình Đăng Bài
-        function viewPost(id) {
-            // Có thể mở modal chi tiết hoặc chuyển trang, ví dụ:
-            window.location.href = '/admin/post/' + id;
+        function viewPost(postId) {
+            window.location.href = '/admin/post/' + postId;
         }
-        function cancelSchedule(id) {
+        function cancelSchedule(postId) {
             if(confirm('Bạn có chắc chắn muốn hủy lịch bài viết này?')) {
-                fetch('/admin/cancel-schedule/' + id, {
+                fetch('/admin/cancel-schedule/' + postId, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
@@ -770,9 +768,9 @@
                 .catch(err => alert('Lỗi kết nối: ' + err.message));
             }
         }
-        function approvePost(id) {
+        function approvePost(postId) {
             if(confirm('Bạn có chắc chắn muốn cho phép đăng bài này?')) {
-                fetch('/admin/approve-post/' + id, {
+                fetch('/admin/approve-post/' + postId, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content

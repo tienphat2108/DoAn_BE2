@@ -88,27 +88,28 @@ class PostController extends Controller
         if (!empty($errors)) {
             return back()->withErrors($errors)->withInput();
         }
-        $post = Post::create([
-            'title' => $request->title,
-            'user_id' => $user->id,
-            'status' => $request->filled('scheduled_at') ? 'scheduled' : 'pending',
-            'content' => $request->content,
-            'scheduled_at' => $request->scheduled_at,
-        ]);
-        // Log trạng thái bài viết sau khi tạo
-        \Illuminate\Support\Facades\Log::info('Post created with status: ' . $post->status . ' for post ID: ' . $post->id);
-        // Lưu media nếu có
+
+        // Tạo bài viết mới
+        $post = new Post();
+        $post->user_id = $user->id;
+        $post->title = $request->title;
+        $post->content = $request->content;
+        $post->status = $request->filled('scheduled_at') ? 'scheduled' : 'pending';
+        $post->scheduled_at = $request->scheduled_at;
+        $post->save();
+
+        // Xử lý upload media
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
-                $path = $file->store('media', 'public');
-                $type = $file->getClientMimeType();
-                Media::create([
-                    'post_id' => $post->id,
-                    'file_url' => $path,
-                    'file_type' => $type,
-                ]);
+                $path = $file->store('public/media');
+                $media = new Media();
+                $media->post_id = $post->id;
+                $media->file_url = str_replace('public/', '', $path);
+                $media->file_type = $file->getMimeType();
+                $media->save();
             }
         }
+
         // Ghi lịch sử đăng bài
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
@@ -306,5 +307,23 @@ class PostController extends Controller
             ]);
         }
         return response()->json(['success' => true, 'draft_id' => $post->id]);
+    }
+
+    public function postSchedule()
+    {
+        // Lấy tất cả bài viết cho tab 'All'
+        $allPosts = Post::orderBy('created_at', 'desc')->with(['user', 'media'])->get();
+        // Lấy bài viết đã lên lịch cho tab 'Lịch trình Đăng Bài'
+        $scheduledPosts = Post::where('status', 'scheduled')->orderBy('scheduled_at', 'asc')->get();
+        $histories = \App\Models\PostHistory::with(['post', 'user'])->orderBy('created_at', 'desc')->get();
+        return view('admin.quanlylichdangbai', compact('scheduledPosts', 'histories', 'allPosts'));
+    }
+
+    public function checkStatus($id)
+    {
+        $post = Post::find($id);
+        return response()->json([
+            'status' => $post ? 'exists' : 'deleted'
+        ]);
     }
 }

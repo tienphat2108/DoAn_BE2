@@ -113,6 +113,27 @@
         .post-menu div:hover {
             background: #f0f0f0;
         }
+        .comment-body {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .comment-content {
+            margin: 0; /* Remove default paragraph margin */
+        }
+        .edit-comment-btn {
+            background: none;
+            border: 1px solid #007bff;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .edit-comment-btn:hover {
+            text-decoration: underline;
+            background-color: rgba(0, 123, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -289,17 +310,21 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->comment_id }}">
-                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
-                                <p class="comment-content">{{ $comment->content }}</p>
-                                @if(Auth::id() === $comment->user_id)
-                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
-                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
-                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
-                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
-                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
-                                    </form>
-                                @endif
-                                <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                <div class="comment-header">
+                                    <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                    <span style="color: #888; font-size: 12px; margin-left: 8px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <div class="comment-body">
+                                    <p class="comment-content">{{ $comment->content }}</p>
+                                    @if(Auth::id() === $comment->user_id)
+                                        <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                    @endif
+                                </div>
+                                <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                    <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                    <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
+                                    <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                </form>
                             </div>
                         @endforeach
                         @if(Auth::check())
@@ -381,17 +406,21 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->comment_id }}">
-                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
-                                <p class="comment-content">{{ $comment->content }}</p>
-                                @if(Auth::id() === $comment->user_id)
-                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
-                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
-                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
-                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
-                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
-                                    </form>
-                                @endif
-                                <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                <div class="comment-header">
+                                    <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                    <span style="color: #888; font-size: 12px; margin-left: 8px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <div class="comment-body">
+                                    <p class="comment-content">{{ $comment->content }}</p>
+                                    @if(Auth::id() === $comment->user_id)
+                                        <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                    @endif
+                                </div>
+                                <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                    <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                    <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
+                                    <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                </form>
                             </div>
                         @endforeach
                         @if(Auth::check())
@@ -443,6 +472,12 @@
     <script src="{{ asset('js/trangchu.js') }}"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+    function escapeHTML(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
     console.log('Script AJAX bình luận đã chạy!');
     document.querySelectorAll('form.comment-form').forEach(function(form) {
         console.log('Đã gắn submit cho form:', form);
@@ -483,7 +518,28 @@
                     }
                     var newComment = document.createElement('div');
                     newComment.className = 'comment';
-                    newComment.innerHTML = '<strong>Bạn</strong><p>' + content + '</p><span style=\"color: #888; font-size: 12px;\">Vừa xong</span>';
+                    newComment.id = 'comment-' + data.id;
+                    var authUserId = {{ Auth::id() }};
+                    var commentHtml = 
+                        '<div class="comment-header">' +
+                            '<strong>Bạn</strong>' +
+                            '<span style="color: #888; font-size: 12px; margin-left: 8px;">Vừa xong</span>' +
+                        '</div>' +
+                        '<div class="comment-body">' +
+                            '<p class="comment-content">' + escapeHTML(content) + '</p>';
+
+                    commentHtml += '<button class="edit-comment-btn" onclick="showEditCommentForm(' + data.id + ')">Sửa</button>';
+
+                    commentHtml += 
+                        '</div>' +
+                        '<form class="edit-comment-form" id="edit-comment-form-' + data.id + '" style="display:none; margin-top:5px;">' +
+                            '<input type="text" class="edit-comment-input" value="' + escapeHTML(content) + '" style="width:70%;padding:3px;">' +
+                            '<button type="button" onclick="submitEditComment(' + data.id + ', this)">Lưu</button>' +
+                            '<button type="button" onclick="cancelEditComment(' + data.id + ')">Hủy</button>' +
+                        '</form>';
+
+                    newComment.innerHTML = commentHtml;
+
                     commentsDiv.insertBefore(newComment, form);
                     form.querySelector('textarea[name="content"]').value = '';
                 } else {
@@ -713,6 +769,18 @@
 
     function handlePostTypeChange(type) {
         const scheduleDiv = document.getElementById('scheduled-time-display');
+        const statusInput = document.querySelector('input[name="status"]');
+
+        if (statusInput) {
+            if (type === 'now') {
+                statusInput.value = 'pending';
+            } else if (type === 'scheduled') {
+                statusInput.value = 'scheduled';
+            } else if (type === 'urgent') {
+                statusInput.value = 'urgent';
+            }
+        }
+
         if (type === 'scheduled' && scheduleDiv.textContent !== '') {
             scheduleDiv.style.display = 'block';
         } else {
@@ -790,6 +858,82 @@
         .catch(err => {
             alert('Có lỗi khi cập nhật bình luận!');
             console.error(err);
+        });
+    }
+
+    function showLogoutModal() {
+        document.getElementById('logoutModal').style.display = 'flex';
+    }
+
+    function hideLogoutModal() {
+        document.getElementById('logoutModal').style.display = 'none';
+    }
+
+    function confirmLogout() {
+        document.getElementById('logout-form').submit();
+    }
+
+    // Đóng modal khi click ra ngoài
+    window.onclick = function(event) {
+        var modal = document.getElementById('logoutModal');
+        if (event.target == modal) {
+            hideLogoutModal();
+        }
+    }
+
+    // Hàm xóa bài viết
+    function deletePost(postId) {
+        // Kiểm tra trạng thái bài viết trước khi xóa
+        fetch(`/posts/${postId}/check-status`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'deleted') {
+                alert('Lỗi vui lòng tải lại trang để cập nhật dữ liệu!');
+                // Xóa bài viết khỏi DOM nếu nó vẫn còn hiển thị
+                const postElement = document.getElementById(`post-${postId}`);
+                if (postElement) {
+                    postElement.remove();
+                }
+            } else {
+                // Nếu bài viết chưa bị xóa, hỏi xác nhận trước khi xóa
+                if (confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
+                    fetch(`/posts/${postId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Xóa bài viết khỏi DOM sau khi xóa thành công
+                            const postElement = document.getElementById(`post-${postId}`);
+                            if (postElement) {
+                                postElement.remove();
+                            }
+                        } else {
+                            // Hiển thị thông báo lỗi nếu xóa không thành công (ví dụ: quyền hạn)
+                            alert(data.message || 'Có lỗi xảy ra khi xóa bài viết!');
+                        }
+                    })
+                    .catch(error => {
+                        alert('Có lỗi xảy ra khi xóa bài viết!');
+                        console.error('Delete error:', error);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            // Xử lý lỗi khi gọi API check-status
+            alert('Có lỗi xảy ra khi kiểm tra trạng thái bài viết!');
+            console.error('Status check error:', error);
         });
     }
     </script>
