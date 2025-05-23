@@ -462,3 +462,99 @@ body {
 .comment-item button:hover {
     background: #bdbdbd;
 }
+
+/* Custom styles for action buttons in pending posts table */
+.posts-table .action-cell .btn {
+    padding: 6px 12px; /* Adjust padding */
+    border-radius: 4px; /* Match admin theme radius */
+    font-size: 0.9rem; /* Smaller font size for compact look */
+}
+
+.posts-table .action-cell .btn-info {
+    background-color: #17a2b8; /* Bootstrap Info color */
+    color: white;
+    border: 1px solid #17a2b8;
+}
+
+.posts-table .action-cell .btn-info:hover {
+    background-color: #1391a2;
+    border-color: #118b98;
+}
+
+.posts-table .action-cell .btn-success {
+    background-color: #28a745; /* Bootstrap Success color */
+    color: white;
+    border: 1px solid #28a745;
+}
+
+.posts-table .action-cell .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.posts-table .action-cell .btn-danger {
+    background-color: #dc3545; /* Bootstrap Danger color */
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.posts-table .action-cell .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Add some margin between the inline forms/links */
+.posts-table .action-cell > * {
+    margin-right: 5px; /* Space out buttons and links */
+}
+
+.posts-table .action-cell > *:last-child {
+    margin-right: 0; /* No margin for the last item */
+}
+
+/* Styles for action buttons and link in post detail view */
+.card-body .mt-4 .btn,
+.card-body .mt-4 a.btn {
+    padding: 8px 16px; /* Adjust padding */
+    border-radius: 4px; /* Match admin theme radius */
+    font-size: 1rem; /* Standard font size */
+    margin-right: 10px; /* Space between elements */
+}
+
+.card-body .mt-4 .btn:last-child,
+.card-body .mt-4 a.btn:last-child {
+    margin-right: 0; /* No margin for the last element */
+}
+
+.card-body .mt-4 .btn-success {
+    background-color: #28a745; /* Bootstrap Success color */
+    color: white;
+    border: 1px solid #28a745;
+}
+
+.card-body .mt-4 .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.card-body .mt-4 .btn-danger {
+    background-color: #dc3545; /* Bootstrap Danger color */
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.card-body .mt-4 .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.card-body .mt-4 .btn-secondary {
+    background-color: #6c757d; /* Bootstrap Secondary color */
+    color: white;
+    border: 1px solid #6c757d;
+}
+
+.card-body .mt-4 .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}

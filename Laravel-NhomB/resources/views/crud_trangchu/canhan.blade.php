@@ -155,7 +155,7 @@
                             <button>Thích ({{ $post->likes->count() }})</button>
                             <button>Bình luận ({{ $post->comments->count() }})</button>
                         </div>
-                        <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;">
+                        <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
                             @csrf
                             @method('DELETE')
                         </form>

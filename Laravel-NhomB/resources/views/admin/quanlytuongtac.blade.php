@@ -181,6 +181,8 @@
                                 <th>Lượt Thích</th>
                                 <th>Bình Luận</th>
                                 <th>Chia Sẻ</th>
+                                <th>Trạng Thái</th>
+                                <th>Hành Động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -192,6 +194,15 @@
                                 <td>{{ $post->likes_count }}</td>
                                 <td>{{ $post->comments_count }}</td>
                                 <td>{{ $post->shares_count }}</td>
+                                <td>{{ $post->status }}</td>
+                                <td>
+                                    @if($post->status == 'request')
+                                        <form action="{{ route('admin.approvePost', $post->id) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="btn-approve">Duyệt</button>
+                                        </form>
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>

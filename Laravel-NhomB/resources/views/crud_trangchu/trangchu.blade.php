@@ -270,7 +270,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
+                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -366,7 +366,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="deletePost({{ $post->id }})">Xóa</div>
+                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -769,6 +769,18 @@
 
     function handlePostTypeChange(type) {
         const scheduleDiv = document.getElementById('scheduled-time-display');
+        const statusInput = document.querySelector('input[name="status"]');
+
+        if (statusInput) {
+            if (type === 'now') {
+                statusInput.value = 'pending';
+            } else if (type === 'scheduled') {
+                statusInput.value = 'scheduled';
+            } else if (type === 'urgent') {
+                statusInput.value = 'urgent';
+            }
+        }
+
         if (type === 'scheduled' && scheduleDiv.textContent !== '') {
             scheduleDiv.style.display = 'block';
         } else {
