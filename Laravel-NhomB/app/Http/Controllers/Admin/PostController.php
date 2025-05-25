@@ -69,7 +69,18 @@ class PostController extends Controller
 
     public function destroy($id)
     {
-        $post = Post::findOrFail($id);
+        $post = Post::find($id);
+
+        if (!$post) {
+            // If post is not found, it might have been deleted elsewhere
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bài viết đã bị xóa ở nơi khác. Vui lòng tải lại trang.'
+                ], 404); // Use 404 Not Found status code
+            }
+            return redirect()->back()->with('error', 'Bài viết đã bị xóa ở nơi khác. Vui lòng tải lại trang.');
+        }
 
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
