@@ -1,6 +1,11 @@
 @extends('layouts.admin_custom')
 
 @section('content')
+@if(session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+@endif
 <div class="container mt-4">
     <div class="card">
         <div class="card-header">
@@ -30,7 +35,7 @@
                         <button type="submit" class="btn btn-success">Duyệt</button>
                     </form>
                 @endif
-                <form action="{{ route('admin.deletePost', $post->id) }}" method="POST" style="display:inline-block; margin-left: 10px;">
+                <form action="{{ route('admin.posts.destroy', $post->id) }}" method="POST" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">Xóa</button>

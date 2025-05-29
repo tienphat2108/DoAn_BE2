@@ -72,6 +72,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/posts/{post}', [AdminPostController::class, 'show'])->name('posts.show');
     Route::post('/posts/{post}/approve', [AdminPostController::class, 'approve'])->name('posts.approve');
     Route::post('/posts/{post}/reject', [AdminPostController::class, 'reject'])->name('posts.reject');
+    Route::delete('/pending-posts/{id}', [App\Http\Controllers\Admin\PostApprovalController::class, 'destroy'])->name('posts.destroy');
     
     // Quản lý bình luận
     Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
@@ -89,7 +90,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/tracking', [AnalyticsController::class, 'viewTracking'])->name('tracking');
     Route::get('/performance-report', [AnalyticsController::class, 'performanceReport'])->name('performance-report');
-    Route::get('/send-notification', [AnalyticsController::class, 'sendNotification'])->name('send-notification');
+    Route::get('/send-notification', [AnalyticsController::class, 'sendNotification'])->name('analytics.send-notification');
     Route::get('/xuatdulieu', [AnalyticsController::class, 'exportData'])->name('xuatdulieu');
     Route::get('/xuatdulieu/export', [AnalyticsController::class, 'export'])->name('xuatdulieu.export');
     

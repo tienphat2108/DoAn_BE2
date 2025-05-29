@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PostEditRequest;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\PostHistory;
 
 class PostApprovalController extends Controller
 {
@@ -42,13 +45,40 @@ class PostApprovalController extends Controller
         return redirect()->back()->with('success', 'Bài viết đã bị từ chối');
     }
 
-    public function destroy(Post $post)
+    public function destroy($id)
     {
-        if ($post->status === 'approved') {
-            $post->delete();
-            return redirect()->back()->with('success', 'Bài viết đã được xóa thành công');
+        try {
+            DB::beginTransaction();
+
+            $post = Post::lockForUpdate()->find($id);
+
+            if (!$post) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Bài viết đã bị xóa ở nơi khác. Vui lòng tải lại trang.');
+            }
+
+            if ($post->status === 'approved' || $post->status === 'pending') {
+                // Ghi lịch sử xóa bài viết
+                PostHistory::create([
+                    'post_id' => $post->id,
+                    'user_id' => Auth::id(),
+                    'action' => 'delete',
+                    'details' => 'Bài viết đã bị xóa bởi admin'
+                ]);
+
+                $post->delete();
+                DB::commit();
+                return redirect()->back()->with('success', 'Bài viết đã được xóa thành công');
+            }
+
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Chỉ có thể xóa bài viết đang chờ duyệt hoặc đã duyệt');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi khi xóa bài viết: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi xóa bài viết. Vui lòng thử lại.');
         }
-        return redirect()->back()->with('error', 'Chỉ có thể xóa bài viết đã được duyệt');
     }
 
     public function requestEdit(Request $request, Post $post)
