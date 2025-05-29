@@ -72,7 +72,7 @@
         }
     </style>
 </head>
-<body data-current-user-id="{{ Auth::id() }}" data-profile-user-id="{{ $user->id }}">
+<body data-current-user-id="{{ Auth::id() }}" data-profile-user-id="{{ $user->id }}" data-current-user-name="{{ Auth::check() ? (Auth::user()->full_name ?? Auth::user()->username) : 'Ẩn danh' }}">
     @if(session('success'))
         <div id="toast-success" style="position:fixed;top:24px;right:24px;z-index:9999;background:#28a745;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
             {{ session('success') }}
@@ -174,10 +174,10 @@
                             @endif
                         </div>
                         <div class="post-actions">
-                            <button class="like-btn{{ $post->likes->contains('user_id', Auth::id()) ? ' liked' : '' }}" data-post-id="{{ $post->id }}" style="{{ $post->likes->contains('user_id', Auth::id()) ? 'color:#0056b3;' : '' }}">
+                            <button class="like-btn action{{ $post->likes->contains('user_id', Auth::id()) ? ' liked' : '' }}" data-post-id="{{ $post->id }}" data-action="like" style="{{ $post->likes->contains('user_id', Auth::id()) ? 'color:#0056b3;' : '' }}">
                                 Thích (<span id="like-count-{{ $post->id }}">{{ $post->likes->count() }}</span>)
                             </button>
-                            <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
+                            <button class="toggle-comments-btn action" data-post-id="{{ $post->id }}" data-action="comment">
                                 Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
                             </button>
                             <span class="view-count" style="margin-left: 10px; color: #888; font-size: 14px;">
@@ -194,13 +194,13 @@
                                     <div class="comment-body">
                                         <p class="comment-content">{{ $comment->content }}</p>
                                         @if(Auth::id() === $comment->user_id)
-                                            <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
+                                            <button class="edit-comment-btn" data-comment-id="{{ $comment->comment_id }}">Sửa</button>
                                         @endif
                                     </div>
                                     <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
                                         <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
-                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
-                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
+                                        <button type="button" data-comment-id="{{ $comment->comment_id }}" class="save-comment-btn">Lưu</button>
+                                        <button type="button" data-comment-id="{{ $comment->comment_id }}" class="cancel-comment-btn">Hủy</button>
                                     </form>
                                 </div>
                             @endforeach
@@ -332,260 +332,6 @@
     }
     </script>
     <script>
-    // Bell notification logic
-    let bellNoti = [];
-    @if(session('success'))
-        bellNoti.push({type:'success',msg:`{{ session('success') }}`});
-    @endif
-    @if(session('error'))
-        bellNoti.push({type:'error',msg:`{{ session('error') }}`});
-    @endif
-    function renderBellList() {
-        const list = document.getElementById('bell-list');
-        if (!bellNoti.length) {
-            list.innerHTML = '<div style="padding:16px;color:#888;">Không có thông báo mới</div>';
-        } else {
-            list.innerHTML = bellNoti.map(n => `<div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;color:${n.type==='success'?'#28a745':'#dc3545'};font-weight:500;">${n.msg}</div>`).join('');
-        }
-        document.getElementById('bell-badge').style.display = bellNoti.length ? 'block' : 'none';
-        document.getElementById('bell-badge').textContent = bellNoti.length;
-    }
-    document.getElementById('bell-icon').onclick = function() {
-        const dropdown = document.getElementById('bell-dropdown');
-        dropdown.style.display = dropdown.style.display==='block' ? 'none' : 'block';
-        renderBellList();
-    };
-    // Ẩn dropdown khi click ngoài
-    document.addEventListener('click', function(e) {
-        if (!document.getElementById('bell-notification').contains(e.target)) {
-            document.getElementById('bell-dropdown').style.display = 'none';
-        }
-    });
-    // Hiển thị badge nếu có noti
-    renderBellList();
-    </script>
-    <script>
-    // Helper function to escape HTML
-    function escapeHTML(str) {
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
-    }
-
-    // Toggle comment section display using event delegation
-    document.body.addEventListener('click', function(event) {
-        const target = event.target;
-        const toggleButton = target.closest('.post-actions .toggle-comments-btn');
-
-        if (toggleButton) {
-            const postId = toggleButton.getAttribute('data-post-id');
-            const commentsDiv = document.getElementById('comments-' + postId);
-
-            if (commentsDiv) {
-                if (commentsDiv.style.display === 'none' || commentsDiv.style.display === '') {
-                    commentsDiv.style.display = 'block';
-                } else {
-                    commentsDiv.style.display = 'none';
-                }
-            }
-        }
-    });
-
-    // Handle Like/Unlike using event delegation on the document body
-    document.body.addEventListener('click', function(event) {
-        // Check if the clicked element or its parent is a like button
-        const clickedButton = event.target.closest('.post-actions .like-btn');
-
-        if (clickedButton) {
-            console.log('Clicked like button:', clickedButton);
-            var postId = clickedButton.getAttribute('data-post-id');
-            var likeCountSpan = clickedButton.querySelector('span') || clickedButton; // Get the span or the button itself
-
-            // Ensure the span exists for updating count dynamically
-            if (!likeCountSpan || likeCountSpan === clickedButton) {
-                 var currentText = clickedButton.textContent;
-                var match = currentText.match(/\d+/);
-                var current = match ? parseInt(match[0]) : 0;
-                 clickedButton.innerHTML = 'Thích (<span id="like-count-' + postId + '">' + current + '</span>)';
-                 likeCountSpan = document.getElementById('like-count-' + postId);
-             }
-
-            var liked = clickedButton.classList.contains('liked');
-            var url = '/posts/' + postId + '/like';
-            var method = liked ? 'DELETE' : 'POST';
-
-            fetch(url, {
-                method: method,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    var current = parseInt(likeCountSpan.textContent);
-                    if (liked) {
-                        likeCountSpan.textContent = current > 0 ? current - 1 : 0;
-                        clickedButton.classList.remove('liked');
-                        clickedButton.style.color = ''; // Reset color
-                    } else {
-                        likeCountSpan.textContent = current + 1;
-                        clickedButton.classList.add('liked');
-                        clickedButton.style.color = '#0056b3'; // Set liked color
-                    }
-                } else {
-                    alert('Có lỗi khi thích bài viết!');
-                }
-            })
-            .catch(err => {
-                alert('Có lỗi khi thích bài viết!');
-                console.error('AJAX like error:', err);
-            });
-        }
-    });
-
-    // Handle submitting new comment via AJAX
-    document.querySelectorAll('form.comment-form').forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            var postId = form.querySelector('input[name="post_id"]').value;
-            var content = form.querySelector('textarea[name="content"]').value;
-            var countSpan = document.getElementById('comment-count-' + postId);
-            var commentsDiv = form.closest('.comments');
-
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    post_id: postId,
-                    content: content
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(text) });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success || data.id) { // Check for success or presence of new comment ID
-                    // Update comment count
-                    if (countSpan) {
-                        var current = parseInt(countSpan.textContent);
-                        countSpan.textContent = current + 1;
-                    }
-
-                    // Create and append new comment HTML
-                    var newComment = document.createElement('div');
-                    newComment.className = 'comment';
-                    newComment.id = 'comment-' + data.id; // Assign ID returned from server
-
-                    // Build comment HTML dynamically
-                    var commentHtml =
-                        '<div class="comment-header">' +
-                            '<strong>Bạn</strong>' + // Assuming 'Bạn' for the current user who just commented
-                            '<span style="color: #888; font-size: 12px; margin-left: 8px;">Vừa xong</span>' +
-                        '</div>' +
-                        '<div class="comment-body">' +
-                            '<p class="comment-content">' + escapeHTML(content) + '</p>';
-
-                    // Add edit button (assuming the current user is the author since they just created it)
-                    commentHtml += '<button class="edit-comment-btn" onclick="showEditCommentForm(' + data.id + ')">Sửa</button>';
-
-                    commentHtml +=
-                        '</div>' +
-                        '<form class="edit-comment-form" id="edit-comment-form-' + data.id + '" style="display:none; margin-top:5px;">' +
-                            '<input type="text" class="edit-comment-input" value="' + escapeHTML(content) + '" style="width:70%;padding:3px;">' +
-                            '<button type="button" onclick="submitEditComment(' + data.id + ', this)">Lưu</button>' +
-                            '<button type="button" onclick="cancelEditComment(' + data.id + ')">Hủy</button>' +
-                        '</form>';
-
-                    newComment.innerHTML = commentHtml;
-
-                    // Insert the new comment before the form
-                    commentsDiv.insertBefore(newComment, form);
-
-                    // Clear the textarea
-                    form.querySelector('textarea[name="content"]').value = '';
-                } else {
-                    alert(data.message || 'Có lỗi khi gửi bình luận!');
-                }
-            })
-            .catch(err => {
-                alert('Có lỗi khi gửi bình luận!');
-                console.error('AJAX error:', err);
-            });
-        });
-    });
-
-    // Functions for editing comments
-    function showEditCommentForm(commentId) {
-        const commentElement = document.getElementById('comment-' + commentId);
-        if (!commentElement) return;
-
-        const commentContent = commentElement.querySelector('.comment-content');
-        const editForm = commentElement.querySelector('.edit-comment-form');
-        const editButton = commentElement.querySelector('.edit-comment-btn');
-
-        if (commentContent) commentContent.style.display = 'none';
-        if (editForm) editForm.style.display = 'inline-block';
-        if (editButton) editButton.style.display = 'none';
-    }
-
-    function cancelEditComment(commentId) {
-        const commentElement = document.getElementById('comment-' + commentId);
-        if (!commentElement) return;
-
-        const commentContent = commentElement.querySelector('.comment-content');
-        const editForm = commentElement.querySelector('.edit-comment-form');
-        const editButton = commentElement.querySelector('.edit-comment-btn');
-
-        if (commentContent) commentContent.style.display = 'block';
-        if (editForm) editForm.style.display = 'none';
-        if (editButton) editButton.style.display = 'inline-block';
-    }
-
-    function submitEditComment(commentId) {
-        const commentElement = document.getElementById('comment-' + commentId);
-        if (!commentElement) return;
-
-        const editForm = commentElement.querySelector('.edit-comment-form');
-        const input = editForm ? editForm.querySelector('.edit-comment-input') : null;
-        const newContent = input ? input.value.trim() : '';
-
-        if (!newContent) { alert('Nội dung không được để trống!'); return; }
-        if (!editForm) { console.error('Edit form not found for comment:', commentId); return; }
-
-        fetch('/comments/' + commentId, {
-            method: 'PUT', // Assuming PUT method for update
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ content: newContent })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const commentContentElement = commentElement.querySelector('.comment-content');
-                if(commentContentElement) commentContentElement.textContent = newContent;
-                cancelEditComment(commentId); // Hide form and show content+button
-            } else {
-                alert(data.message || 'Có lỗi khi cập nhật bình luận!');
-            }
-        })
-        .catch(err => {
-                alert('Có lỗi khi cập nhật bình luận!');
-                console.error(err);
-            });
-    }
-
     // Use event delegation for comment edit/save/cancel buttons
     document.body.addEventListener('click', function(event) {
         const target = event.target;
@@ -617,9 +363,33 @@
             }
         }
     });
-
-    // Other existing scripts (like modals, profile menu, etc.) should be outside or adjusted
-
+    </script>
+    {{-- Include necessary scripts for notifications --}}
+    <script src="{{ asset('js/trangchu.js') }}"></script>
+    <script>
+        // Pass route URLs to JavaScript functions after trangchu.js is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure elements and functions from trangchu.js are available
+            if (typeof fetchUnreadNotificationsCount === 'function') {
+                // Fetch initial unread count on DOMContentLoaded
+                fetchInitialUnreadCount("{{ route('notifications.unread') }}", document.getElementById('bell-badge'));
+            }
+            if (typeof setupBellNotificationListener === 'function') {
+                // Setup bell notification listener
+                const bellIconElement = document.getElementById('bell-icon');
+                const bellDropdownElement = document.getElementById('bell-dropdown');
+                const bellListElement = document.getElementById('bell-list');
+                const bellBadgeElement = document.getElementById('bell-badge');
+                setupBellNotificationListener(
+                    bellIconElement,
+                    bellDropdownElement,
+                    bellListElement,
+                    "{{ route('notifications.unread') }}",
+                    "{{ route('notifications.markAsRead') }}",
+                    bellBadgeElement // Pass bellBadgeElement here
+                );
+            }
+        });
     </script>
 </body>
 </html>

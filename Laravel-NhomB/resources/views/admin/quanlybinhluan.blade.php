@@ -56,6 +56,44 @@
         .delete-btn:hover {
             background-color: #c82333;
         }
+        .comment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .comment-table th,
+        .comment-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .comment-table th {
+            background-color: #f2f2f2;
+        }
+        .comment-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .comment-table tr:hover {
+            background-color: #e9e9e9;
+        }
+        .comment-actions button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .bulk-actions {
+            margin-bottom: 15px;
+        }
+        .bulk-delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .bulk-delete-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -93,6 +131,18 @@
                     <a href="{{ route('admin.guithongbao') }}"><button class="interaction-btn">GỬI THÔNG BÁO</button></a>
                 </div>
                 <h2 class="interaction-title">Quản Lý Bình Luận</h2>
+                {{-- Hiển thị thông báo flash --}}
+                @if(Session::has('success'))
+                    <div class="alert alert-success" style="background-color: #d4edda; color: #155724; border-color: #c3e6cb; padding: .75rem 1.25rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem;">
+                        {{ Session::get('success') }}
+                    </div>
+                @endif
+                @if(Session::has('error'))
+                    <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; padding: .75rem 1.25rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem;">
+                        {{ Session::get('error') }}
+                    </div>
+                @endif
+                {{-- Kết thúc hiển thị thông báo flash --}}
                 <div class="interaction-filters" style="display: flex; gap: 12px; margin-bottom: 24px;">
                     <input type="text" id="searchInput" placeholder="Tìm kiếm bình luận..." class="interaction-select">
                     <select id="postFilter" class="interaction-select">
@@ -110,20 +160,42 @@
                     </select>
                     <button onclick="searchComments()" class="interaction-filter-btn">Tìm kiếm</button>
                 </div>
-                <div class="comment-list">
-                    @forelse($comments as $comment)
-                        <div class="comment-item" id="comment-{{ $comment->comment_id }}">
-                            <div class="comment-content">
-                                <b>{{ $comment->user ? $comment->user->name : 'Người dùng không tồn tại' }}:</b> <span class="comment-text">{{ $comment->content }}</span>
-                            </div>
-                            <div class="comment-actions">
-                                <button onclick="deleteComment({{ $comment->comment_id }})" class="delete-btn">Xóa</button>
-                            </div>
-                        </div>
-                    @empty
-                        <p>Không có bình luận nào.</p>
-                    @endforelse
-                </div>
+                <form id="bulkDeleteForm" method="POST" action="{{ route('admin.comments.bulkDelete') }}">
+                    @csrf
+                    <div class="bulk-actions">
+                        <button type="submit" class="bulk-delete-btn" onclick="return confirm('Bạn có chắc chắn muốn xóa các bình luận đã chọn không?');">Xóa bình luận đã chọn</button>
+                    </div>
+                    <table class="comment-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll"></th>
+                                <th>Nội dung</th>
+                                <th>Người dùng</th>
+                                <th>Bài viết</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($comments as $comment)
+                                <tr id="comment-row-{{ $comment->comment_id }}">
+                                    <td><input type="checkbox" name="comment_ids[]" value="{{ $comment->comment_id }}"></td>
+                                    <td><span class="comment-text">{{ $comment->content }}</span></td>
+                                    <td>{{ $comment->user ? $comment->user->name : 'Người dùng không tồn tại' }}</td>
+                                    <td>{{ $comment->post ? Str::limit($comment->post->title, 50) : 'Bài viết không tồn tại' }}</td>
+                                    <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <button onclick="deleteComment({{ $comment->comment_id }})" class="delete-btn">Xóa</button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6">Không có bình luận nào.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </form>
             </div>
         </div>
     </div>
@@ -160,8 +232,12 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        const commentElement = document.querySelector(`#comment-${commentId}`);
-                        commentElement.remove();
+                        const commentElement = document.querySelector(`#comment-row-${commentId}`);
+                        if (commentElement) {
+                            commentElement.remove();
+                        } else {
+                            console.error('Không tìm thấy phần tử bình luận để xóa');
+                        }
                     } else {
                         alert('Có lỗi xảy ra khi xóa bình luận');
                     }
@@ -210,6 +286,18 @@
             if (userId) {
                 document.getElementById('userFilter').value = userId;
             }
+
+            // JavaScript cho chức năng chọn tất cả
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const commentCheckboxes = document.querySelectorAll('input[name="comment_ids[]"]');
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    commentCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                });
+            }
         };
 
         // Thêm sự kiện Enter cho ô tìm kiếm
@@ -239,6 +327,14 @@
                 hideLogoutModal();
             }
         }
+
+        document.getElementById('bulkDeleteForm').addEventListener('submit', function(event) {
+            console.log('Bulk delete form submit event triggered.');
+
+            const selectedComments = document.querySelectorAll('input[name="comment_ids[]"]:checked');
+            const selectedIds = Array.from(selectedComments).map(checkbox => checkbox.value);
+            console.log('Selected comment IDs before form submission:', selectedIds);
+        });
     </script>
 </body>
 </html>

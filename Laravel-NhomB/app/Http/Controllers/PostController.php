@@ -140,12 +140,22 @@ class PostController extends Controller
         $request->validate([
             'title'   => 'required|string|max:255',
             'content' => 'sometimes',
+            'original_updated_at' => 'required|date',
         ]);
+
+        if ($post->updated_at->format('Y-m-d H:i:s') !== \Carbon\Carbon::parse($request->input('original_updated_at'))->format('Y-m-d H:i:s')) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Bài viết đã được chỉnh sửa ở nơi khác. Vui lòng tải lại trang.'], 409);
+            }
+            return redirect()->back()->with('error', 'Bài viết đã được chỉnh sửa ở nơi khác. Vui lòng tải lại trang.');
+        }
+
         $post->title = $request->input('title');
         if ($request->has('content')) {
             $post->content = $request->input('content');
         }
         $post->save();
+
         // Ghi lịch sử cập nhật bài viết
         \App\Models\PostHistory::create([
             'post_id' => $post->id,
@@ -153,9 +163,11 @@ class PostController extends Controller
             'action' => 'edit',
             'details' => 'Bài viết đã được cập nhật'
         ]);
+
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json(['success' => true, 'title' => $post->title]);
         }
+
         return redirect()->route('trangchu')->with('success', 'Cập nhật thành công!');
     }
 
