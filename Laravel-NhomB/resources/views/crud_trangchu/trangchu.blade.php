@@ -176,6 +176,7 @@
                 @csrf
                 @method('PUT')
                 <input type="text" name="title" id="edit-post-title" placeholder="Tiêu đề mới" required style="width:100%;margin-bottom:10px;">
+                <input type="hidden" name="original_updated_at" id="edit-post-original-updated-at">
                 <div class="modal-buttons">
                     <button type="submit" class="modal-button confirm-button">Lưu</button>
                     <button type="button" class="modal-button cancel-button" onclick="hideEditModal()">Hủy</button>
