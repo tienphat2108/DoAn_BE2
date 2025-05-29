@@ -54,7 +54,7 @@ class PostApprovalController extends Controller
 
             if (!$post) {
                 DB::rollBack();
-                return redirect()->back()->with('error', 'Bài viết đã bị xóa ở nơi khác. Vui lòng tải lại trang.');
+                return redirect()->route('admin.baichoduyet')->with('error', 'Bài viết đã bị xóa ở nơi khác. Vui lòng tải lại trang.');
             }
 
             if ($post->status === 'approved' || $post->status === 'pending') {
@@ -68,7 +68,7 @@ class PostApprovalController extends Controller
 
                 $post->delete();
                 DB::commit();
-                return redirect()->back()->with('success', 'Bài viết đã được xóa thành công');
+                return redirect()->route('admin.baichoduyet')->with('success', 'Bài viết đã được xóa thành công');
             }
 
             DB::rollBack();
