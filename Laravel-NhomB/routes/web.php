@@ -15,6 +15,8 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\PostApprovalController;
 use App\Http\Controllers\Admin\ViewTrackingController;
+use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\UserNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,7 +75,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Quản lý bình luận
     Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
-    
+    Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+    Route::put('/comments/{id}', [AdminCommentController::class, 'update'])->name('comments.update');
+    Route::post('/comments/bulk-delete', [AdminCommentController::class, 'bulkDelete'])->name('comments.bulkDelete');
+
     // Tương tác
     Route::get('/tuongtac', [InteractionController::class, 'index'])->name('tuongtac');
     
@@ -92,7 +97,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/baocaohieusuat', [AnalyticsController::class, 'performanceReport'])->name('baocaohieusuat');
     
     // Gửi thông báo
-    Route::get('/guithongbao', [AnalyticsController::class, 'sendNotification'])->name('guithongbao');
+    Route::get('/guithongbao', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('guithongbao');
+    Route::post('/send-notification', [App\Http\Controllers\Admin\NotificationController::class, 'send'])->name('send-notification');
+    Route::get('/notification-history', [App\Http\Controllers\Admin\NotificationController::class, 'getNotificationHistory'])->name('notification-history');
     
     // Các trang khác
     Route::get('/baidaduyet', [AdminPostController::class, 'approvedPosts'])->name('baidaduyet');
@@ -103,19 +110,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/post-history', [PostHistoryController::class, 'index'])->name('post-history');
     Route::post('/api/post-history/filter', [PostHistoryController::class, 'filter'])->name('post-history.filter');
 
-    // Quản lý bình luận
-    Route::get('/quanlybinhluan', [AdminCommentController::class, 'index'])->name('quanlybinhluan');
-    Route::delete('/comments/{id}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
-    Route::put('/comments/{id}', [AdminCommentController::class, 'update'])->name('comments.update');
-
     // Quản lý tương tác
     Route::get('/quanlytuongtac', [InteractionController::class, 'index'])->name('quanlytuongtac');
 
     Route::get('/theodoiluotxem', [\App\Http\Controllers\Admin\ViewTrackingController::class, 'index'])->name('theodoiluotxem');
-
-    Route::get('/guithongbao', function() {
-        return view('admin.guithongbao');
-    })->name('guithongbao');
 
     // Trang thống kê số lượng bài duyệt
     Route::get('/thongkebaiduyet', function() {
@@ -147,6 +145,13 @@ Route::get('/', function () {
 Route::resource('posts', PostController::class)->middleware('auth');
 Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 Route::post('/posts/{id}/share', [PostController::class, 'share'])->name('posts.share')->middleware('auth');
+Route::get('/posts/{id}/check-status', [PostController::class, 'checkStatus'])->name('posts.check-status')->middleware('auth');
 
 // Route cho bình luận (dành cho user)
 Route::post('/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');
+
+// User Notification Routes
+Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/unread', [UserNotificationController::class, 'getUnreadNotifications'])->name('unread');
+    Route::post('/mark-as-read', [UserNotificationController::class, 'markAsRead'])->name('markAsRead');
+});

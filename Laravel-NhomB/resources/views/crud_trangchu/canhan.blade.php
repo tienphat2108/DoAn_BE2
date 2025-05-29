@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Trang cá nhân</title>
     <link rel="stylesheet" href="{{ asset('css/canhan.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -48,9 +49,30 @@
         .post {
             position: relative;
         }
+        .comment-body {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .comment-content {
+            margin: 0; /* Remove default paragraph margin */
+        }
+        .edit-comment-btn {
+            background: none;
+            border: 1px solid #007bff; /* Added border */
+            color: #007bff; /* Or a suitable color for edit button */
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 2px 6px; /* Added padding */
+            border-radius: 4px; /* Optional: add rounded corners */
+        }
+        .edit-comment-btn:hover {
+            text-decoration: underline;
+            background-color: rgba(0, 123, 255, 0.1); /* Optional: subtle background change on hover */
+        }
     </style>
 </head>
-<body data-current-user-id="{{ Auth::id() }}" data-profile-user-id="{{ $user->id }}">
+<body data-current-user-id="{{ Auth::id() }}" data-profile-user-id="{{ $user->id }}" data-current-user-name="{{ Auth::check() ? (Auth::user()->full_name ?? Auth::user()->username) : 'Ẩn danh' }}">
     @if(session('success'))
         <div id="toast-success" style="position:fixed;top:24px;right:24px;z-index:9999;background:#28a745;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
             {{ session('success') }}
@@ -152,8 +174,46 @@
                             @endif
                         </div>
                         <div class="post-actions">
-                            <button>Thích ({{ $post->likes->count() }})</button>
-                            <button>Bình luận ({{ $post->comments->count() }})</button>
+                            <button class="like-btn action{{ $post->likes->contains('user_id', Auth::id()) ? ' liked' : '' }}" data-post-id="{{ $post->id }}" data-action="like" style="{{ $post->likes->contains('user_id', Auth::id()) ? 'color:#0056b3;' : '' }}">
+                                Thích (<span id="like-count-{{ $post->id }}">{{ $post->likes->count() }}</span>)
+                            </button>
+                            <button class="toggle-comments-btn action" data-post-id="{{ $post->id }}" data-action="comment">
+                                Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
+                            </button>
+                            <span class="view-count" style="margin-left: 10px; color: #888; font-size: 14px;">
+                                👁️ <span id="view-count-{{ $post->id }}">{{ $post->views->count() }}</span> lượt xem
+                            </span>
+                        </div>
+                        <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
+                            @foreach($post->comments as $comment)
+                                <div class="comment" id="comment-{{ $comment->comment_id }}">
+                                    <div class="comment-header">
+                                        <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                        <span style="color: #888; font-size: 12px; margin-left: 8px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                    <div class="comment-body">
+                                        <p class="comment-content">{{ $comment->content }}</p>
+                                        @if(Auth::id() === $comment->user_id)
+                                            <button class="edit-comment-btn" data-comment-id="{{ $comment->comment_id }}">Sửa</button>
+                                        @endif
+                                    </div>
+                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                        <button type="button" data-comment-id="{{ $comment->comment_id }}" class="save-comment-btn">Lưu</button>
+                                        <button type="button" data-comment-id="{{ $comment->comment_id }}" class="cancel-comment-btn">Hủy</button>
+                                    </form>
+                                </div>
+                            @endforeach
+                            @if(Auth::check())
+                                <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
+                                    @csrf
+                                    <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                    <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>
+                                    <button type="submit">Gửi bình luận</button>
+                                </form>
+                            @else
+                                <p><a href="{{ route('login') }}">Đăng nhập</a> để bình luận.</p>
+                            @endif
                         </div>
                         <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
                             @csrf
@@ -272,37 +332,64 @@
     }
     </script>
     <script>
-    // Bell notification logic
-    let bellNoti = [];
-    @if(session('success'))
-        bellNoti.push({type:'success',msg:`{{ session('success') }}`});
-    @endif
-    @if(session('error'))
-        bellNoti.push({type:'error',msg:`{{ session('error') }}`});
-    @endif
-    function renderBellList() {
-        const list = document.getElementById('bell-list');
-        if (!bellNoti.length) {
-            list.innerHTML = '<div style="padding:16px;color:#888;">Không có thông báo mới</div>';
-        } else {
-            list.innerHTML = bellNoti.map(n => `<div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;color:${n.type==='success'?'#28a745':'#dc3545'};font-weight:500;">${n.msg}</div>`).join('');
+    // Use event delegation for comment edit/save/cancel buttons
+    document.body.addEventListener('click', function(event) {
+        const target = event.target;
+
+        // Handle Edit button click
+        if (target.classList.contains('edit-comment-btn')) {
+            const commentElement = target.closest('.comment');
+            if (commentElement) {
+                const commentId = commentElement.id.replace('comment-', '');
+                showEditCommentForm(commentId);
+            }
         }
-        document.getElementById('bell-badge').style.display = bellNoti.length ? 'block' : 'none';
-        document.getElementById('bell-badge').textContent = bellNoti.length;
-    }
-    document.getElementById('bell-icon').onclick = function() {
-        const dropdown = document.getElementById('bell-dropdown');
-        dropdown.style.display = dropdown.style.display==='block' ? 'none' : 'block';
-        renderBellList();
-    };
-    // Ẩn dropdown khi click ngoài
-    document.addEventListener('click', function(e) {
-        if (!document.getElementById('bell-notification').contains(e.target)) {
-            document.getElementById('bell-dropdown').style.display = 'none';
+
+        // Handle Save button click
+        if (target.tagName === 'BUTTON' && target.textContent.trim() === 'Lưu' && target.closest('.edit-comment-form')) {
+             const commentElement = target.closest('.comment');
+            if (commentElement) {
+                const commentId = commentElement.id.replace('comment-', '');
+                submitEditComment(commentId);
+            }
+        }
+
+        // Handle Cancel button click
+        if (target.tagName === 'BUTTON' && target.textContent.trim() === 'Hủy' && target.closest('.edit-comment-form')) {
+             const commentElement = target.closest('.comment');
+            if (commentElement) {
+                const commentId = commentElement.id.replace('comment-', '');
+                cancelEditComment(commentId);
+            }
         }
     });
-    // Hiển thị badge nếu có noti
-    renderBellList();
+    </script>
+    {{-- Include necessary scripts for notifications --}}
+    <script src="{{ asset('js/trangchu.js') }}"></script>
+    <script>
+        // Pass route URLs to JavaScript functions after trangchu.js is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure elements and functions from trangchu.js are available
+            if (typeof fetchUnreadNotificationsCount === 'function') {
+                // Fetch initial unread count on DOMContentLoaded
+                fetchInitialUnreadCount("{{ route('notifications.unread') }}", document.getElementById('bell-badge'));
+            }
+            if (typeof setupBellNotificationListener === 'function') {
+                // Setup bell notification listener
+                const bellIconElement = document.getElementById('bell-icon');
+                const bellDropdownElement = document.getElementById('bell-dropdown');
+                const bellListElement = document.getElementById('bell-list');
+                const bellBadgeElement = document.getElementById('bell-badge');
+                setupBellNotificationListener(
+                    bellIconElement,
+                    bellDropdownElement,
+                    bellListElement,
+                    "{{ route('notifications.unread') }}",
+                    "{{ route('notifications.markAsRead') }}",
+                    bellBadgeElement // Pass bellBadgeElement here
+                );
+            }
+        });
     </script>
 </body>
 </html>
