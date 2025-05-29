@@ -246,6 +246,19 @@ body {
     font-size: 14px;
 }
 
+.post-actions button:hover {
+    background-color: #f0f2f5;
+}
+
+.post-actions button.liked {
+    color: #1877f2; /* Màu xanh lam */
+    font-weight: 600;
+}
+
+.post-actions .share-btn {
+    color: #65676b;
+}
+
 .comments {
     margin-top: 10px;
     padding-top: 10px;

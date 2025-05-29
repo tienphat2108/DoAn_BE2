@@ -113,9 +113,30 @@
         .post-menu div:hover {
             background: #f0f0f0;
         }
+        .comment-body {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .comment-content {
+            margin: 0; /* Remove default paragraph margin */
+        }
+        .edit-comment-btn {
+            background: none;
+            border: 1px solid #007bff;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .edit-comment-btn:hover {
+            text-decoration: underline;
+            background-color: rgba(0, 123, 255, 0.1);
+        }
     </style>
 </head>
-<body>
+<body data-current-user-name="{{ Auth::user()->full_name ?? Auth::user()->username ?? 'Ẩn danh' }}">
     <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-left">
@@ -155,6 +176,7 @@
                 @csrf
                 @method('PUT')
                 <input type="text" name="title" id="edit-post-title" placeholder="Tiêu đề mới" required style="width:100%;margin-bottom:10px;">
+                <input type="hidden" name="original_updated_at" id="edit-post-original-updated-at">
                 <div class="modal-buttons">
                     <button type="submit" class="modal-button confirm-button">Lưu</button>
                     <button type="button" class="modal-button cancel-button" onclick="hideEditModal()">Hủy</button>
@@ -180,13 +202,11 @@
             <div id="toast-success" style="position:fixed;top:24px;right:24px;z-index:9999;background:#28a745;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
                 {{ session('success') }}
             </div>
-            <script>setTimeout(()=>{var t=document.getElementById('toast-success');if(t)t.style.display='none';},3000);</script>
         @endif
         @if(session('error'))
             <div id="toast-error" style="position:fixed;top:24px;right:24px;z-index:9999;background:#dc3545;color:#fff;padding:16px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:1.1em;">
                 {{ session('error') }}
             </div>
-            <script>setTimeout(()=>{var t=document.getElementById('toast-error');if(t)t.style.display='none';},3000);</script>
         @endif
         @if($errors->any())
             <div class="alert alert-danger">
@@ -238,7 +258,7 @@
                 @php $userLiked = $post->likes->contains('user_id', Auth::id()); @endphp
                 <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}" style="border:2px solid #dc3545;box-shadow:0 2px 12px rgba(220,53,69,0.08);">
                     <div class="post-header">
-                        <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
+                        <img src="{{ asset(optional($post->user)->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
                             <h3 style="color:#dc3545;font-weight:bold;">🔥 {{ optional($post->user)->full_name ?? optional($post->user)->username ?? '[Người dùng đã xóa]' }} <span style="font-size:0.9em;font-weight:400;">(Khẩn cấp)</span></h3>
                             <span>{{ $post->created_at->diffForHumans() }}</span>
@@ -249,7 +269,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
+                                    <div data-action="delete">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -272,13 +292,13 @@
                         @endif
                     </div>
                     <div class="post-actions">
-                        <button class="like-btn{{ $userLiked ? ' liked' : '' }}" data-post-id="{{ $post->id }}" style="{{ $userLiked ? 'color:#1877f2;' : '' }}">
+                        <button class="like-btn {{ $post->likes->contains('user_id', Auth::id()) ? 'liked' : '' }}" data-post-id="{{ $post->id }}">
                             Thích (<span id="like-count-{{ $post->id }}">{{ $post->likes->count() }}</span>)
                         </button>
                         <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
                             Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
                         </button>
-                        <button class="share-btn" onclick="sharePost({{ $post->id }})">
+                        <button class="share-btn" data-post-id="{{ $post->id }}">
                             Chia sẻ (<span id="share-count-{{ $post->id }}">{{ $post->shares_count ?? 0 }}</span>)
                         </button>
                         <span class="view-count" style="margin-left: 10px; color: #888; font-size: 14px;">
@@ -289,24 +309,28 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->comment_id }}">
-                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
-                                <p class="comment-content">{{ $comment->content }}</p>
-                                @if(Auth::id() === $comment->user_id)
-                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
-                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
-                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
-                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
-                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
-                                    </form>
-                                @endif
-                                <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                <div class="comment-header">
+                                    <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                    <span style="color: #888; font-size: 12px; margin-left: 8px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <div class="comment-body">
+                                    <p class="comment-content">{{ $comment->content }}</p>
+                                    @if(Auth::id() === $comment->user_id)
+                                        <button class="edit-comment-btn" data-comment-id="{{ $comment->comment_id }}">Sửa</button>
+                                    @endif
+                                </div>
+                                <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                    <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                    <button type="button" data-comment-id="{{ $comment->comment_id }}" class="save-comment-btn">Lưu</button>
+                                    <button type="button" data-comment-id="{{ $comment->comment_id }}" class="cancel-comment-btn">Hủy</button>
+                                </form>
                             </div>
                         @endforeach
                         @if(Auth::check())
-                            <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
+                            <form class="comment-form" onsubmit="return false;">
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->id }}">
-                                <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>
+                                <textarea name="content" required placeholder="Nhập bình luận..."></textarea>
                                 <button type="submit">Gửi bình luận</button>
                             </form>
                         @else
@@ -314,12 +338,17 @@
                         @endif
                     </div>
                 </div>
+                <!-- Form xóa ẩn -->
+                <form id="delete-form-{{ $post->id }}" action="{{ route('posts.destroy', ['post' => $post->id]) }}" method="POST" style="display:none;">
+                    @csrf
+                    @method('DELETE')
+                </form>
             @endforeach
             @foreach($normalPosts as $post)
                 @php $userLiked = $post->likes->contains('user_id', Auth::id()); @endphp
                 <div class="post" id="post-{{ $post->id }}" data-user-id="{{ $post->user_id }}">
                     <div class="post-header">
-                        <img src="{{ asset($post->user->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
+                        <img src="{{ asset(optional($post->user)->avatar_url ?? '/images/default-avatar.png') }}" alt="Avatar" class="avatar">
                         <div class="post-info">
                             <h3>{{ optional($post->user)->full_name ?? optional($post->user)->username ?? '[Người dùng đã xóa]' }}</h3>
                             <span>
@@ -341,7 +370,7 @@
                             <div class="post-menu">
                                 @if(Auth::id() === $post->user_id)
                                     <div onclick="editPost({{ $post->id }})">Chỉnh sửa</div>
-                                    <div onclick="if(confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) deletePost({{ $post->id }})">Xóa</div>
+                                    <div data-action="delete">Xóa</div>
                                 @else
                                     <div onclick="reportPost({{ $post->id }})">Báo cáo</div>
                                 @endif
@@ -364,13 +393,13 @@
                         @endif
                     </div>
                     <div class="post-actions">
-                        <button class="like-btn{{ $userLiked ? ' liked' : '' }}" data-post-id="{{ $post->id }}" style="{{ $userLiked ? 'color:#1877f2;' : '' }}">
+                        <button class="like-btn {{ $post->likes->contains('user_id', Auth::id()) ? 'liked' : '' }}" data-post-id="{{ $post->id }}">
                             Thích (<span id="like-count-{{ $post->id }}">{{ $post->likes->count() }}</span>)
                         </button>
                         <button class="toggle-comments-btn" data-post-id="{{ $post->id }}">
                             Bình luận (<span id="comment-count-{{ $post->id }}">{{ $post->comments->count() }}</span>)
                         </button>
-                        <button class="share-btn" onclick="sharePost({{ $post->id }})">
+                        <button class="share-btn" data-post-id="{{ $post->id }}">
                             Chia sẻ (<span id="share-count-{{ $post->id }}">{{ $post->shares_count ?? 0 }}</span>)
                         </button>
                         <span class="view-count" style="margin-left: 10px; color: #888; font-size: 14px;">
@@ -381,24 +410,28 @@
                     <div class="comments" id="comments-{{ $post->id }}" style="display:none;">
                         @foreach($post->comments as $comment)
                             <div class="comment" id="comment-{{ $comment->comment_id }}">
-                                <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
-                                <p class="comment-content">{{ $comment->content }}</p>
-                                @if(Auth::id() === $comment->user_id)
-                                    <button class="edit-comment-btn" onclick="showEditCommentForm({{ $comment->comment_id }})">Sửa</button>
-                                    <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
-                                        <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
-                                        <button type="button" onclick="submitEditComment({{ $comment->comment_id }}, this)">Lưu</button>
-                                        <button type="button" onclick="cancelEditComment({{ $comment->comment_id }})">Hủy</button>
-                                    </form>
-                                @endif
-                                <span style="color: #888; font-size: 12px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                <div class="comment-header">
+                                    <strong>{{ optional($comment->user)->full_name ?? optional($comment->user)->username ?? '[Người dùng đã xóa]' }}</strong>
+                                    <span style="color: #888; font-size: 12px; margin-left: 8px;">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <div class="comment-body">
+                                    <p class="comment-content">{{ $comment->content }}</p>
+                                    @if(Auth::id() === $comment->user_id)
+                                        <button class="edit-comment-btn" data-comment-id="{{ $comment->comment_id }}">Sửa</button>
+                                    @endif
+                                </div>
+                                <form class="edit-comment-form" id="edit-comment-form-{{ $comment->comment_id }}" style="display:none; margin-top:5px;">
+                                    <input type="text" class="edit-comment-input" value="{{ $comment->content }}" style="width:70%;padding:3px;">
+                                    <button type="button" data-comment-id="{{ $comment->comment_id }}" class="save-comment-btn">Lưu</button>
+                                    <button type="button" data-comment-id="{{ $comment->comment_id }}" class="cancel-comment-btn">Hủy</button>
+                                </form>
                             </div>
                         @endforeach
                         @if(Auth::check())
-                            <form class="comment-form" action="/comments" method="POST" style="margin-top: 8px;">
+                            <form class="comment-form" onsubmit="return false;">
                                 @csrf
                                 <input type="hidden" name="post_id" value="{{ $post->id }}">
-                                <textarea name="content" required placeholder="Nhập bình luận..." style="width:100%;min-height:40px;"></textarea>
+                                <textarea name="content" required placeholder="Nhập bình luận..."></textarea>
                                 <button type="submit">Gửi bình luận</button>
                             </form>
                         @else
@@ -442,368 +475,34 @@
 
     <script src="{{ asset('js/trangchu.js') }}"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
     <script>
-    console.log('Script AJAX bình luận đã chạy!');
-    document.querySelectorAll('form.comment-form').forEach(function(form) {
-        console.log('Đã gắn submit cho form:', form);
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            var postId = form.querySelector('input[name="post_id"]').value;
-            var content = form.querySelector('textarea[name="content"]').value;
-            var countSpan = document.getElementById('comment-count-' + postId);
-            var commentsDiv = form.closest('.comments');
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    post_id: postId,
-                    content: content
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(text) });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success || data.id) {
-                    if (countSpan) {
-                        var match = countSpan.textContent.match(/\d+/);
-                        if (match) {
-                            var current = parseInt(match[0]);
-                            countSpan.textContent = current + 1;
-                        } else {
-                            countSpan.textContent = 1;
-                        }
-                    }
-                    var newComment = document.createElement('div');
-                    newComment.className = 'comment';
-                    newComment.innerHTML = '<strong>Bạn</strong><p>' + content + '</p><span style=\"color: #888; font-size: 12px;\">Vừa xong</span>';
-                    commentsDiv.insertBefore(newComment, form);
-                    form.querySelector('textarea[name="content"]').value = '';
-                } else {
-                    alert('Có lỗi khi gửi bình luận!');
-                }
-            })
-            .catch(err => {
-                alert('Có lỗi khi gửi bình luận!');
-                console.error('AJAX error:', err);
-            });
-        });
-    });
+        // Pass route URLs and elements to JavaScript functions after trangchu.js is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure elements and functions from trangchu.js are available
+            const bellIconElement = document.getElementById('bell-icon');
+            const bellDropdownElement = document.getElementById('bell-dropdown');
+            const bellListElement = document.getElementById('bell-list');
+            const bellBadgeElement = document.getElementById('bell-badge');
 
-    // Toggle hiển thị bình luận
-    document.querySelectorAll('.toggle-comments-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var postId = btn.getAttribute('data-post-id');
-            var commentsDiv = document.getElementById('comments-' + postId);
-            if (commentsDiv.style.display === 'none' || commentsDiv.style.display === '') {
-                commentsDiv.style.display = 'block';
-            } else {
-                commentsDiv.style.display = 'none';
+            if (typeof fetchInitialUnreadCount === 'function' && bellBadgeElement) {
+                // Fetch initial unread count on DOMContentLoaded
+                fetchInitialUnreadCount("{{ route('notifications.unread') }}", bellBadgeElement);
+            }
+
+            if (typeof setupBellNotificationListener === 'function' && bellIconElement && bellDropdownElement && bellListElement && bellBadgeElement) {
+                // Setup bell notification listener
+                setupBellNotificationListener(
+                    bellIconElement,
+                    bellDropdownElement,
+                    bellListElement,
+                    "{{ route('notifications.unread') }}",
+                    "{{ route('notifications.markAsRead') }}",
+                    bellBadgeElement
+                );
             }
         });
-    });
-
-    // Xử lý like/unlike động cho nút Thích
-    document.querySelectorAll('.post-actions button').forEach(function(btn) {
-        if (btn.textContent.trim().startsWith('Thích')) {
-            btn.addEventListener('click', function() {
-                var postId = btn.getAttribute('data-post-id');
-                var likeCountSpan = btn.querySelector('span') || btn;
-                // Nếu chưa có span, tạo span cho số like
-                if (!likeCountSpan || likeCountSpan === btn) {
-                    var currentText = btn.textContent;
-                    var match = currentText.match(/Thích \((\d+)\)/);
-                    var current = match ? parseInt(match[1]) : 0;
-                    btn.innerHTML = 'Thích (<span id="like-count-' + postId + '">' + current + '</span>)';
-                    likeCountSpan = document.getElementById('like-count-' + postId);
-                }
-                var liked = btn.classList.contains('liked');
-                var url = '/posts/' + postId + '/like';
-                var method = liked ? 'DELETE' : 'POST';
-                fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        var current = parseInt(likeCountSpan.textContent);
-                        if (liked) {
-                            likeCountSpan.textContent = current > 0 ? current - 1 : 0;
-                            btn.classList.remove('liked');
-                            btn.style.color = '';
-                        } else {
-                            likeCountSpan.textContent = current + 1;
-                            btn.classList.add('liked');
-                            btn.style.color = '#1877f2';
-                        }
-                    } else {
-                        alert('Có lỗi khi thích bài viết!');
-                    }
-                })
-                .catch(err => {
-                    alert('Có lỗi khi thích bài viết!');
-                    console.error('AJAX like error:', err);
-                });
-            });
-        }
-    });
-
-    // Hàm chia sẻ bài viết
-    function sharePost(postId) {
-        // Tạo URL của bài viết
-        const postUrl = `${window.location.origin}/posts/${postId}`;
-        
-        // Kiểm tra xem trình duyệt có hỗ trợ Web Share API không
-        if (navigator.share) {
-            navigator.share({
-                title: 'Chia sẻ bài viết từ Fite',
-                text: 'Xem bài viết này trên Fite',
-                url: postUrl
-            })
-            .then(() => {
-                // Cập nhật số lượt chia sẻ
-                updateShareCount(postId);
-            })
-            .catch(error => {
-                console.log('Lỗi khi chia sẻ:', error);
-                fallbackShare(postUrl);
-            });
-        } else {
-            fallbackShare(postUrl);
-        }
-    }
-
-    // Hàm thay thế khi trình duyệt không hỗ trợ Web Share API
-    function fallbackShare(url) {
-        // Tạo một input ẩn để copy URL
-        const tempInput = document.createElement('input');
-        tempInput.value = url;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        
-        alert('Đã sao chép liên kết bài viết vào clipboard!');
-    }
-
-    // Hàm cập nhật số lượt chia sẻ
-    function updateShareCount(postId) {
-        fetch(`/posts/${postId}/share`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const shareCountSpan = document.getElementById(`share-count-${postId}`);
-                if (shareCountSpan) {
-                    shareCountSpan.textContent = parseInt(shareCountSpan.textContent) + 1;
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Lỗi khi cập nhật lượt chia sẻ:', error);
-        });
-    }
-
-    // Xử lý báo cáo bài viết
-    function reportPost(postId) {
-        if (!confirm('Bạn chắc chắn muốn báo cáo bài viết này?')) return;
-        fetch('/posts/' + postId + '/report', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message || (data.success ? 'Đã báo cáo bài viết!' : 'Có lỗi xảy ra!'));
-        })
-        .catch(err => {
-            alert('Có lỗi khi báo cáo bài viết!');
-            console.error('Report error:', err);
-        });
-    }
-
-    let autosaveTimer = null;
-    let lastDraft = localStorage.getItem('draft_post') ? JSON.parse(localStorage.getItem('draft_post')) : null;
-
-    function saveDraftAjax() {
-        const title = document.querySelector('input[name="title"]').value;
-        const content = document.getElementById('post-content').value;
-        const draft_id = document.getElementById('draft_id').value;
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('content', content);
-        if (draft_id) formData.append('draft_id', draft_id);
-        fetch('/api/autosave-draft', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success && data.draft_id) {
-                document.getElementById('draft_id').value = data.draft_id;
-                localStorage.setItem('draft_post', JSON.stringify({title, content, draft_id: data.draft_id}));
-            }
-        });
-    }
-
-    function restoreDraft() {
-        if (lastDraft) {
-            document.querySelector('input[name="title"]').value = lastDraft.title || '';
-            document.getElementById('post-content').value = lastDraft.content || '';
-            document.getElementById('draft_id').value = lastDraft.draft_id || '';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        restoreDraft();
-        const titleInput = document.querySelector('input[name="title"]');
-        const contentInput = document.getElementById('post-content');
-        [titleInput, contentInput].forEach(input => {
-            input.addEventListener('input', function() {
-                if (autosaveTimer) clearTimeout(autosaveTimer);
-                autosaveTimer = setTimeout(saveDraftAjax, 10000);
-            });
-        });
-        window.addEventListener('beforeunload', saveDraftAjax);
-    });
-
-    function showScheduleModal() {
-        document.getElementById('scheduleModal').style.display = 'flex';
-    }
-    function hideScheduleModal() {
-        document.getElementById('scheduleModal').style.display = 'none';
-    }
-    function confirmSchedule() {
-        const scheduledAt = document.getElementById('scheduled_at_modal').value;
-        if (scheduledAt) {
-            document.querySelector('input[name="scheduled_at"]').value = scheduledAt;
-            hideScheduleModal();
-            const displayDiv = document.getElementById('scheduled-time-display');
-            if (displayDiv) {
-                const dateObj = new Date(scheduledAt);
-                const formattedDate = dateObj.toLocaleDateString('vi-VN') + ' ' + dateObj.toLocaleTimeString('vi-VN');
-                displayDiv.textContent = 'Thời gian đặt lịch: ' + formattedDate;
-                displayDiv.style.display = 'block';
-            }
-        } else {
-            alert('Vui lòng chọn thời gian đăng bài!');
-        }
-    }
-
-    function handlePostTypeChange(type) {
-        const scheduleDiv = document.getElementById('scheduled-time-display');
-        const statusInput = document.querySelector('input[name="status"]');
-
-        if (statusInput) {
-            if (type === 'now') {
-                statusInput.value = 'pending';
-            } else if (type === 'scheduled') {
-                statusInput.value = 'scheduled';
-            } else if (type === 'urgent') {
-                statusInput.value = 'urgent';
-            }
-        }
-
-        if (type === 'scheduled' && scheduleDiv.textContent !== '') {
-            scheduleDiv.style.display = 'block';
-        } else {
-            scheduleDiv.style.display = 'none';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        handlePostTypeChange(document.querySelector('input[name="post_type"]:checked').value);
-    });
-
-    // Bell notification logic
-    let bellNoti = [];
-    @if(session('success'))
-        bellNoti.push({type:'success',msg:`{{ session('success') }}`});
-    @endif
-    @if(session('error'))
-        bellNoti.push({type:'error',msg:`{{ session('error') }}`});
-    @endif
-    function renderBellList() {
-        const list = document.getElementById('bell-list');
-        if (!bellNoti.length) {
-            list.innerHTML = '<div style="padding:16px;color:#888;">Không có thông báo mới</div>';
-        } else {
-            list.innerHTML = bellNoti.map(n => `<div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;color:${n.type==='success'?'#28a745':'#dc3545'};font-weight:500;">${n.msg}</div>`).join('');
-        }
-        document.getElementById('bell-badge').style.display = bellNoti.length ? 'block' : 'none';
-        document.getElementById('bell-badge').textContent = bellNoti.length;
-    }
-    document.getElementById('bell-icon').onclick = function() {
-        const dropdown = document.getElementById('bell-dropdown');
-        dropdown.style.display = dropdown.style.display==='block' ? 'none' : 'block';
-        renderBellList();
-    };
-    // Ẩn dropdown khi click ngoài
-    document.addEventListener('click', function(e) {
-        if (!document.getElementById('bell-notification').contains(e.target)) {
-            document.getElementById('bell-dropdown').style.display = 'none';
-        }
-    });
-    // Hiển thị badge nếu có noti
-    renderBellList();
-
-    function showEditCommentForm(commentId) {
-        document.getElementById('edit-comment-form-' + commentId).style.display = 'inline-block';
-        document.querySelector('#comment-' + commentId + ' .comment-content').style.display = 'none';
-    }
-    function cancelEditComment(commentId) {
-        document.getElementById('edit-comment-form-' + commentId).style.display = 'none';
-        document.querySelector('#comment-' + commentId + ' .comment-content').style.display = 'block';
-    }
-    function submitEditComment(commentId, btn) {
-        var form = document.getElementById('edit-comment-form-' + commentId);
-        var input = form.querySelector('.edit-comment-input');
-        var newContent = input.value.trim();
-        if (!newContent) { alert('Nội dung không được để trống!'); return; }
-        fetch('/comments/' + commentId, {
-            method: 'PUT',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ content: newContent })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                document.querySelector('#comment-' + commentId + ' .comment-content').textContent = newContent;
-                cancelEditComment(commentId);
-            } else {
-                alert('Có lỗi khi cập nhật bình luận!');
-            }
-        })
-        .catch(err => {
-            alert('Có lỗi khi cập nhật bình luận!');
-            console.error(err);
-        });
-    }
     </script>
+
 </body>
 </html>

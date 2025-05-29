@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class AdminCommentController extends Controller
 {
@@ -40,6 +41,13 @@ class AdminCommentController extends Controller
         // Log số lượng bình luận được lấy
         \Illuminate\Support\Facades\Log::info('AdminCommentController fetching comments. Count: ' . $comments->count());
 
+        // Log data của bình luận đầu tiên để kiểm tra cấu trúc và ID (NEW LOG)
+        if ($comments->count() > 0) {
+            \Illuminate\Support\Facades\Log::info('First comment data:', $comments->first()->toArray());
+        } else {
+            \Illuminate\Support\Facades\Log::info('No comments fetched.');
+        }
+
         $posts = Post::all();
         $users = User::all();
 
@@ -52,7 +60,7 @@ class AdminCommentController extends Controller
     public function destroy($id)
     {
         try {
-            $comment = Comment::findOrFail($id);
+            $comment = Comment::where('comment_id', $id)->firstOrFail();
             $comment->delete();
             
             return response()->json([
@@ -87,5 +95,53 @@ class AdminCommentController extends Controller
                 'message' => 'Có lỗi xảy ra khi cập nhật bình luận'
             ], 500);
         }
+    }
+
+    /**
+     * Xóa nhiều bình luận cùng lúc
+     */
+    public function bulkDelete(Request $request)
+    {
+        // Log the received comment_ids
+        \Illuminate\Support\Facades\Log::info('Bulk delete requested for comment IDs: ' . json_encode($request->input('comment_ids')));
+
+        $request->validate([
+            'comment_ids' => 'required|array',
+            // Sử dụng comment_id làm khóa chính trong validation
+            'comment_ids.*' => 'exists:post_comments,comment_id',
+        ]);
+
+        $commentIds = $request->input('comment_ids');
+
+        // Log comment IDs after validation
+        \Illuminate\Support\Facades\Log::info('Bulk delete comment IDs after validation: ' . json_encode($commentIds));
+
+        try {
+            // Log comment IDs before delete query
+            \Illuminate\Support\Facades\Log::info('Bulk delete processing comment IDs: ' . json_encode($commentIds));
+
+            // Sử dụng comment_id làm khóa chính trong whereIn
+            $deletedCount = Comment::whereIn('comment_id', $commentIds)->delete();
+
+            // Log the result of the delete operation
+            \Illuminate\Support\Facades\Log::info('Bulk delete result - Number of comments deleted: ' . $deletedCount);
+
+            if ($deletedCount > 0) {
+                Session::flash('success', 'Đã xóa thành công ' . $deletedCount . ' bình luận.');
+            } else {
+                // Log that no comments were deleted (optional, covered by $deletedCount log)
+                \Illuminate\Support\Facades\Log::info('Bulk delete result - No comments were deleted.');
+                Session::flash('error', 'Không có bình luận nào được xóa.');
+            }
+
+        } catch (\Exception $e) {
+            Session::flash('error', 'Có lỗi xảy ra khi xóa bình luận: ' . $e->getMessage());
+            // Log the error for debugging
+            \Illuminate\Support\Facades\Log::error('Bulk delete comments failed: ' . $e->getMessage(), ['comment_ids' => $commentIds]);
+        }
+
+        // Chuyển hướng về trang quản lý bình luận, giữ lại các bộ lọc hiện tại
+        $searchParams = $request->only(['search', 'post_id', 'user_id']);
+        return redirect()->route('admin.quanlybinhluan', $searchParams);
     }
 }  

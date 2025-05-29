@@ -63,7 +63,23 @@
             </div>
         </div>
     </div>
-    <!-- Logout Modal và script giữ nguyên như file quanlytuongtac.blade.php -->
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <h2>Đăng xuất</h2>
+            <p>Bạn có muốn đăng xuất không?</p>
+            <div class="modal-buttons">
+                <button class="modal-button confirm-button" onclick="confirmLogout()">Có</button>
+                <button class="modal-button cancel-button" onclick="hideLogoutModal()">Không</button>
+            </div>
+        </div>
+    </div>
+
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
+
     <script>
         function handleExport() {
             const dataType = document.getElementById('data-type').value;
@@ -71,6 +87,26 @@
             // Xây dựng URL dựa trên lựa chọn
             const exportUrl = `{{ route('admin.xuatdulieu.export') }}?type=${dataType}&format=${formatType}`;
             window.location.href = exportUrl;
+        }
+
+        function showLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            document.getElementById('logout-form').submit();
+        }
+
+        // Đóng modal khi click ra ngoài
+        window.onclick = function(event) {
+            var logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) {
+                hideLogoutModal();
+            }
         }
     </script>
 </body>
