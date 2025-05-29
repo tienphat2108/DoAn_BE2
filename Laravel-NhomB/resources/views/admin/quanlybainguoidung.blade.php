@@ -82,10 +82,12 @@
                                         Đã duyệt
                                     @elseif($post->status == 'bản nháp' || $post->status == 'draft')
                                         Bản nháp
-                                    @elseif($post->status == 'bị từ chối')
+                                    @elseif($post->status == 'rejected')
                                         Bị từ chối
                                     @elseif($post->status == 'canceled')
                                         Đã hủy
+                                    @elseif($post->status == 'deleted')
+                                        Đã xóa
                                     @else
                                         {{ $post->status }}
                                     @endif
